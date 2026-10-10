@@ -1,0 +1,484 @@
+-- MySQL dump 10.13  Distrib 8.0.18, for Win64 (x86_64)
+--
+-- Host: 127.0.0.1    Database: travel_projectdigabung
+-- ------------------------------------------------------
+-- Server version	8.4.3
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `bookings`
+--
+
+DROP TABLE IF EXISTS `bookings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `bookings` (
+  `booking_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `booking_date` varchar(50) DEFAULT NULL,
+  `trip_type` varchar(50) DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`booking_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `bookings`
+--
+
+LOCK TABLES `bookings` WRITE;
+/*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
+INSERT INTO `bookings` VALUES (1,1,'2026-06-02','OneWay','Pending'),(2,2,'2026-06-03','RoundTrip','Completed'),(3,3,'2026-06-04','OneWay','Cancelled'),(4,4,'2026-06-05','RoundTrip','Confirmed'),(5,5,'2026-06-06','OneWay','Pending'),(6,6,'2026-06-07','RoundTrip','Completed'),(7,7,'2026-06-08','OneWay','Cancelled'),(8,8,'2026-06-09','RoundTrip','Confirmed'),(9,9,'2026-06-10','OneWay','Pending'),(10,10,'2026-06-11','RoundTrip','Completed'),(11,11,'2026-06-12','OneWay','Cancelled'),(12,12,'2026-06-13','RoundTrip','Confirmed'),(13,13,'2026-06-14','OneWay','Pending'),(14,14,'2026-06-15','RoundTrip','Completed'),(15,15,'2026-06-16','OneWay','Cancelled'),(16,16,'2026-06-17','RoundTrip','Confirmed'),(17,17,'2026-06-18','OneWay','Pending'),(18,18,'2026-06-19','RoundTrip','Completed'),(19,19,'2026-06-20','OneWay','Cancelled'),(20,20,'2026-06-21','RoundTrip','Confirmed'),(21,21,'2026-06-22','OneWay','Pending'),(22,22,'2026-06-23','RoundTrip','Completed'),(23,23,'2026-06-24','OneWay','Cancelled'),(24,24,'2026-06-25','RoundTrip','Confirmed'),(25,25,'2026-06-26','OneWay','Pending'),(26,26,'2026-06-27','RoundTrip','Completed'),(27,27,'2026-06-28','OneWay','Cancelled'),(28,28,'2026-06-01','RoundTrip','Confirmed'),(29,29,'2026-06-02','OneWay','Pending'),(30,30,'2026-06-03','RoundTrip','Completed'),(31,31,'2026-06-04','OneWay','Cancelled'),(32,32,'2026-06-05','RoundTrip','Confirmed'),(33,33,'2026-06-06','OneWay','Pending'),(34,34,'2026-06-07','RoundTrip','Completed'),(35,35,'2026-06-08','OneWay','Cancelled'),(36,36,'2026-06-09','RoundTrip','Confirmed'),(37,37,'2026-06-10','OneWay','Pending'),(38,38,'2026-06-11','RoundTrip','Completed'),(39,39,'2026-06-12','OneWay','Cancelled'),(40,40,'2026-06-13','RoundTrip','Confirmed'),(41,41,'2026-06-14','OneWay','Pending'),(42,42,'2026-06-15','RoundTrip','Completed'),(43,43,'2026-06-16','OneWay','Cancelled'),(44,44,'2026-06-17','RoundTrip','Confirmed'),(45,45,'2026-06-18','OneWay','Pending'),(46,46,'2026-06-19','RoundTrip','Completed'),(47,47,'2026-06-20','OneWay','Cancelled'),(48,48,'2026-06-21','RoundTrip','Confirmed'),(49,49,'2026-06-22','OneWay','Pending'),(50,50,'2026-06-23','RoundTrip','Completed');
+/*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cards`
+--
+
+DROP TABLE IF EXISTS `cards`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cards` (
+  `card_id` int NOT NULL,
+  `payment_id` int DEFAULT NULL,
+  `card_type` varchar(50) DEFAULT NULL,
+  `card_number` varchar(100) DEFAULT NULL,
+  `card_holder_name` varchar(255) DEFAULT NULL,
+  `expired_date` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`card_id`),
+  KEY `payment_id` (`payment_id`),
+  CONSTRAINT `cards_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`payment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cards`
+--
+
+LOCK TABLES `cards` WRITE;
+/*!40000 ALTER TABLE `cards` DISABLE KEYS */;
+INSERT INTO `cards` VALUES (1,1,'MasterCard','4532750012340001','Budi Santoso','12/29'),(2,2,'JCB','4532750012340002','Siti Rahayu','12/210'),(3,3,'AMEX','4532750012340003','Agus Setiawan','12/211'),(4,4,'Visa','4532750012340004','Dewi Lestari','12/212'),(5,5,'MasterCard','4532750012340005','Eko Pratama','12/28'),(6,6,'JCB','4532750012340006','Rina Wulandari','12/29'),(7,7,'AMEX','4532750012340007','Rudi Hidayat','12/210'),(8,8,'Visa','4532750012340008','Sari Kusuma','12/211'),(9,9,'MasterCard','4532750012340009','Ahmad Saputra','12/212'),(10,10,'JCB','4532750012340010','Lani Wijaya','12/28'),(11,11,'AMEX','4532750012340011','Doni Utami','12/29'),(12,12,'Visa','4532750012340012','Maya Nugroho','12/210'),(13,13,'MasterCard','4532750012340013','Andi Suryani','12/211'),(14,14,'JCB','4532750012340014','Fitri Firmansyah','12/212'),(15,15,'AMEX','4532750012340015','Hendra Permata','12/28'),(16,16,'Visa','4532750012340016','Nia Purnama','12/29'),(17,17,'MasterCard','4532750012340017','Bambang Kurniawan','12/210'),(18,18,'JCB','4532750012340018','Dian Suharto','12/211'),(19,19,'AMEX','4532750012340019','Joko Kartika','12/212'),(20,20,'Visa','4532750012340020','Titi Astuti','12/28'),(21,21,'MasterCard','4532750012340021','Gita Ramadhan','12/29'),(22,22,'JCB','4532750012340022','Fajar Siregar','12/210'),(23,23,'AMEX','4532750012340023','Indah Nasution','12/211'),(24,24,'Visa','4532750012340024','Rian Situmorang','12/212'),(25,25,'MasterCard','4532750012340025','Yuni Ginting','12/28'),(26,26,'JCB','4532750012340026','Reza Simanjuntak','12/29'),(27,27,'AMEX','4532750012340027','Siska Hutapea','12/210'),(28,28,'Visa','4532750012340028','Dedi Hasibuan','12/211'),(29,29,'MasterCard','4532750012340029','Ayu Lubis','12/212'),(30,30,'JCB','4532750012340030','Irfan Pane','12/28'),(31,31,'AMEX','4532750012340031','Mega Wibowo','12/29'),(32,32,'Visa','4532750012340032','Adit Sutrisno','12/210'),(33,33,'MasterCard','4532750012340033','Rika Gunawan','12/211'),(34,34,'JCB','4532750012340034','Bayu Susanto','12/212'),(35,35,'AMEX','4532750012340035','Lia Triyono','12/28'),(36,36,'Visa','4532750012340036','Aris Supriyanto','12/29'),(37,37,'MasterCard','4532750012340037','Wulan Effendi','12/210'),(38,38,'JCB','4532750012340038','Taufik Bachtiar','12/211'),(39,39,'AMEX','4532750012340039','Nita Zulkarnain','12/212'),(40,40,'Visa','4532750012340040','Hary Mahendra','12/28'),(41,41,'MasterCard','4532750012340041','Siska Darmawan','12/29'),(42,42,'JCB','4532750012340042','Gilang Kusumo','12/210'),(43,43,'AMEX','4532750012340043','Ratih Sudrajat','12/211'),(44,44,'Visa','4532750012340044','Dimas Prakoso','12/212'),(45,45,'MasterCard','4532750012340045','Tari Setyawan','12/28'),(46,46,'JCB','4532750012340046','Kiki Budiman','12/29'),(47,47,'AMEX','4532750012340047','Vina Subagyo','12/210'),(48,48,'Visa','4532750012340048','Fikri Suwandi','12/211'),(49,49,'MasterCard','4532750012340049','Nanda Triadi','12/212'),(50,50,'JCB','4532750012340050','Rizal Handoko','12/28');
+/*!40000 ALTER TABLE `cards` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cashes`
+--
+
+DROP TABLE IF EXISTS `cashes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cashes` (
+  `cash_id` int NOT NULL,
+  `payment_id` int DEFAULT NULL,
+  `amount_received` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`cash_id`),
+  KEY `payment_id` (`payment_id`),
+  CONSTRAINT `cashes_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`payment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cashes`
+--
+
+LOCK TABLES `cashes` WRITE;
+/*!40000 ALTER TABLE `cashes` DISABLE KEYS */;
+INSERT INTO `cashes` VALUES (1,1,'550000'),(2,2,'600000'),(3,3,'650000'),(4,4,'700000'),(5,5,'750000'),(6,6,'800000'),(7,7,'850000'),(8,8,'900000'),(9,9,'950000'),(10,10,'1000000'),(11,11,'1050000'),(12,12,'1100000'),(13,13,'1150000'),(14,14,'1200000'),(15,15,'1250000'),(16,16,'1300000'),(17,17,'1350000'),(18,18,'1400000'),(19,19,'1450000'),(20,20,'1500000'),(21,21,'1550000'),(22,22,'1600000'),(23,23,'1650000'),(24,24,'1700000'),(25,25,'1750000'),(26,26,'1800000'),(27,27,'1850000'),(28,28,'1900000'),(29,29,'1950000'),(30,30,'2000000'),(31,31,'2050000'),(32,32,'2100000'),(33,33,'2150000'),(34,34,'2200000'),(35,35,'2250000'),(36,36,'2300000'),(37,37,'2350000'),(38,38,'2400000'),(39,39,'2450000'),(40,40,'2500000'),(41,41,'2550000'),(42,42,'2600000'),(43,43,'2650000'),(44,44,'2700000'),(45,45,'2750000'),(46,46,'2800000'),(47,47,'2850000'),(48,48,'2900000'),(49,49,'2950000'),(50,50,'3000000');
+/*!40000 ALTER TABLE `cashes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `companion`
+--
+
+DROP TABLE IF EXISTS `companion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `companion` (
+  `parent_id` int DEFAULT NULL,
+  `infant_id` int DEFAULT NULL,
+  KEY `parent_id` (`parent_id`),
+  KEY `infant_id` (`infant_id`),
+  CONSTRAINT `companion_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `passengers` (`passenger_id`),
+  CONSTRAINT `companion_ibfk_2` FOREIGN KEY (`infant_id`) REFERENCES `passengers` (`passenger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `companion`
+--
+
+LOCK TABLES `companion` WRITE;
+/*!40000 ALTER TABLE `companion` DISABLE KEYS */;
+INSERT INTO `companion` VALUES (1,36),(2,37),(3,38),(4,39),(5,40),(6,41),(7,42),(8,43),(9,44),(10,45),(11,46),(12,47),(13,48),(14,49),(15,50),(16,36),(17,37),(18,38),(19,39),(20,40),(21,41),(22,42),(23,43),(24,44),(25,45),(26,46),(27,47),(28,48),(29,49),(30,50),(31,36),(32,37),(33,38),(34,39),(35,40),(1,41),(2,42),(3,43),(4,44),(5,45),(6,46),(7,47),(8,48),(9,49),(10,50),(11,36),(12,37),(13,38),(14,39),(15,40);
+/*!40000 ALTER TABLE `companion` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `passengerpergi`
+--
+
+DROP TABLE IF EXISTS `passengerpergi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `passengerpergi` (
+  `passpergi_id` int NOT NULL,
+  `trippergi_id` int DEFAULT NULL,
+  `passenger_id` int DEFAULT NULL,
+  `seat_number` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`passpergi_id`),
+  KEY `trippergi_id` (`trippergi_id`),
+  KEY `passenger_id` (`passenger_id`),
+  CONSTRAINT `passengerpergi_ibfk_1` FOREIGN KEY (`trippergi_id`) REFERENCES `tripdetailspergi` (`trippergi_id`),
+  CONSTRAINT `passengerpergi_ibfk_2` FOREIGN KEY (`passenger_id`) REFERENCES `passengers` (`passenger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `passengerpergi`
+--
+
+LOCK TABLES `passengerpergi` WRITE;
+/*!40000 ALTER TABLE `passengerpergi` DISABLE KEYS */;
+INSERT INTO `passengerpergi` VALUES (1,1,1,'B2'),(2,2,2,'C3'),(3,3,3,'D4'),(4,4,4,'E5'),(5,5,5,'F6'),(6,6,6,'A7'),(7,7,7,'B8'),(8,8,8,'C9'),(9,9,9,'D10'),(10,10,10,'E11'),(11,11,11,'F12'),(12,12,12,'A13'),(13,13,13,'B14'),(14,14,14,'C15'),(15,15,15,'D16'),(16,16,16,'E17'),(17,17,17,'F18'),(18,18,18,'A19'),(19,19,19,'B20'),(20,20,20,'C21'),(21,21,21,'D22'),(22,22,22,'E23'),(23,23,23,'F24'),(24,24,24,'A25'),(25,25,25,'B26'),(26,26,26,'C27'),(27,27,27,'D28'),(28,28,28,'E29'),(29,29,29,'F30'),(30,30,30,'A1'),(31,31,31,'B2'),(32,32,32,'C3'),(33,33,33,'D4'),(34,34,34,'E5'),(35,35,35,'F6'),(36,36,36,'A7'),(37,37,37,'B8'),(38,38,38,'C9'),(39,39,39,'D10'),(40,40,40,'E11'),(41,41,41,'F12'),(42,42,42,'A13'),(43,43,43,'B14'),(44,44,44,'C15'),(45,45,45,'D16'),(46,46,46,'E17'),(47,47,47,'F18'),(48,48,48,'A19'),(49,49,49,'B20'),(50,50,50,'C21');
+/*!40000 ALTER TABLE `passengerpergi` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `passengerpulang`
+--
+
+DROP TABLE IF EXISTS `passengerpulang`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `passengerpulang` (
+  `passpulang_id` int NOT NULL,
+  `trippulang_id` int DEFAULT NULL,
+  `passenger_id` int DEFAULT NULL,
+  `seat_number` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`passpulang_id`),
+  KEY `trippulang_id` (`trippulang_id`),
+  KEY `passenger_id` (`passenger_id`),
+  CONSTRAINT `passengerpulang_ibfk_1` FOREIGN KEY (`trippulang_id`) REFERENCES `tripdetailspulang` (`trippulang_id`),
+  CONSTRAINT `passengerpulang_ibfk_2` FOREIGN KEY (`passenger_id`) REFERENCES `passengers` (`passenger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `passengerpulang`
+--
+
+LOCK TABLES `passengerpulang` WRITE;
+/*!40000 ALTER TABLE `passengerpulang` DISABLE KEYS */;
+INSERT INTO `passengerpulang` VALUES (1,1,1,'B2'),(2,2,2,'C3'),(3,3,3,'D4'),(4,4,4,'E5'),(5,5,5,'F6'),(6,6,6,'A7'),(7,7,7,'B8'),(8,8,8,'C9'),(9,9,9,'D10'),(10,10,10,'E11'),(11,11,11,'F12'),(12,12,12,'A13'),(13,13,13,'B14'),(14,14,14,'C15'),(15,15,15,'D16'),(16,16,16,'E17'),(17,17,17,'F18'),(18,18,18,'A19'),(19,19,19,'B20'),(20,20,20,'C21'),(21,21,21,'D22'),(22,22,22,'E23'),(23,23,23,'F24'),(24,24,24,'A25'),(25,25,25,'B26'),(26,26,26,'C27'),(27,27,27,'D28'),(28,28,28,'E29'),(29,29,29,'F30'),(30,30,30,'A1'),(31,31,31,'B2'),(32,32,32,'C3'),(33,33,33,'D4'),(34,34,34,'E5'),(35,35,35,'F6'),(36,36,36,'A7'),(37,37,37,'B8'),(38,38,38,'C9'),(39,39,39,'D10'),(40,40,40,'E11'),(41,41,41,'F12'),(42,42,42,'A13'),(43,43,43,'B14'),(44,44,44,'C15'),(45,45,45,'D16'),(46,46,46,'E17'),(47,47,47,'F18'),(48,48,48,'A19'),(49,49,49,'B20'),(50,50,50,'C21');
+/*!40000 ALTER TABLE `passengerpulang` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `passengers`
+--
+
+DROP TABLE IF EXISTS `passengers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `passengers` (
+  `passenger_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `birth_date` varchar(50) DEFAULT NULL,
+  `ID` varchar(100) DEFAULT NULL,
+  `category` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`passenger_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `passengers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `passengers`
+--
+
+LOCK TABLES `passengers` WRITE;
+/*!40000 ALTER TABLE `passengers` DISABLE KEYS */;
+INSERT INTO `passengers` VALUES (1,2,'Rina Wulandari','1981-02-02','3201987654320001','Adult'),(2,3,'Rudi Hidayat','1982-03-03','3201987654320002','Adult'),(3,4,'Sari Kusuma','1983-04-04','3201987654320003','Adult'),(4,5,'Ahmad Saputra','1984-05-05','3201987654320004','Adult'),(5,6,'Lani Wijaya','1985-06-06','3201987654320005','Adult'),(6,7,'Doni Utami','1986-07-07','3201987654320006','Adult'),(7,8,'Maya Nugroho','1987-08-08','3201987654320007','Adult'),(8,9,'Andi Suryani','1988-09-09','3201987654320008','Adult'),(9,10,'Fitri Firmansyah','1989-10-10','3201987654320009','Adult'),(10,11,'Hendra Permata','1990-11-11','3201987654320010','Adult'),(11,12,'Nia Purnama','1991-12-12','3201987654320011','Adult'),(12,13,'Bambang Kurniawan','1992-01-13','3201987654320012','Adult'),(13,14,'Dian Suharto','1993-02-14','3201987654320013','Adult'),(14,15,'Joko Kartika','1994-03-15','3201987654320014','Adult'),(15,16,'Titi Astuti','1995-04-16','3201987654320015','Adult'),(16,17,'Gita Ramadhan','1996-05-17','3201987654320016','Adult'),(17,18,'Fajar Siregar','1997-06-18','3201987654320017','Adult'),(18,19,'Indah Nasution','1998-07-19','3201987654320018','Adult'),(19,20,'Rian Situmorang','1999-08-20','3201987654320019','Adult'),(20,21,'Yuni Ginting','1980-09-21','3201987654320020','Adult'),(21,22,'Reza Simanjuntak','1981-10-22','3201987654320021','Adult'),(22,23,'Siska Hutapea','1982-11-23','3201987654320022','Adult'),(23,24,'Dedi Hasibuan','1983-12-24','3201987654320023','Adult'),(24,25,'Ayu Lubis','1984-01-25','3201987654320024','Adult'),(25,26,'Irfan Pane','1985-02-26','3201987654320025','Adult'),(26,27,'Mega Wibowo','1986-03-27','3201987654320026','Adult'),(27,28,'Adit Sutrisno','1987-04-28','3201987654320027','Adult'),(28,29,'Rika Gunawan','1988-05-01','3201987654320028','Adult'),(29,30,'Bayu Susanto','1989-06-02','3201987654320029','Adult'),(30,31,'Lia Triyono','1990-07-03','3201987654320030','Adult'),(31,32,'Aris Supriyanto','1991-08-04','3201987654320031','Adult'),(32,33,'Wulan Effendi','1992-09-05','3201987654320032','Adult'),(33,34,'Taufik Bachtiar','1993-10-06','3201987654320033','Adult'),(34,35,'Nita Zulkarnain','1994-11-07','3201987654320034','Adult'),(35,36,'Hary Mahendra','1995-12-08','3201987654320035','Adult'),(36,37,'Siska Darmawan','1996-01-09','3201987654320036','Child'),(37,38,'Gilang Kusumo','1997-02-10','3201987654320037','Child'),(38,39,'Ratih Sudrajat','1998-03-11','3201987654320038','Child'),(39,40,'Dimas Prakoso','1999-04-12','3201987654320039','Child'),(40,41,'Tari Setyawan','1980-05-13','3201987654320040','Child'),(41,42,'Kiki Budiman','1981-06-14','3201987654320041','Child'),(42,43,'Vina Subagyo','1982-07-15','3201987654320042','Child'),(43,44,'Fikri Suwandi','1983-08-16','3201987654320043','Infant'),(44,45,'Nanda Triadi','1984-09-17','3201987654320044','Infant'),(45,46,'Rizal Handoko','1985-10-18','3201987654320045','Infant'),(46,47,'Budi Santoso','1986-11-19','3201987654320046','Infant'),(47,48,'Siti Rahayu','1987-12-20','3201987654320047','Infant'),(48,49,'Agus Setiawan','1988-01-21','3201987654320048','Infant'),(49,50,'Dewi Lestari','1989-02-22','3201987654320049','Infant'),(50,1,'Eko Pratama','1990-03-23','3201987654320050','Infant');
+/*!40000 ALTER TABLE `passengers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payments`
+--
+
+DROP TABLE IF EXISTS `payments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payments` (
+  `payment_id` int NOT NULL,
+  `transaction_id` int DEFAULT NULL,
+  `payment_type` varchar(50) DEFAULT NULL,
+  `payment_date` timestamp NULL DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`payment_id`),
+  KEY `transaction_id` (`transaction_id`),
+  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`transaction_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payments`
+--
+
+LOCK TABLES `payments` WRITE;
+/*!40000 ALTER TABLE `payments` DISABLE KEYS */;
+INSERT INTO `payments` VALUES (1,1,'Card','2026-06-02 07:25:00','Pending'),(2,2,'Cash','2026-06-03 07:25:00','Failed'),(3,3,'Card','2026-06-04 07:25:00','Success'),(4,4,'Cash','2026-06-05 07:25:00','Pending'),(5,5,'Card','2026-06-06 07:25:00','Failed'),(6,6,'Cash','2026-06-07 07:25:00','Success'),(7,7,'Card','2026-06-08 07:25:00','Pending'),(8,8,'Cash','2026-06-09 07:25:00','Failed'),(9,9,'Card','2026-06-10 07:25:00','Success'),(10,10,'Cash','2026-06-11 07:25:00','Pending'),(11,11,'Card','2026-06-12 07:25:00','Failed'),(12,12,'Cash','2026-06-13 07:25:00','Success'),(13,13,'Card','2026-06-14 07:25:00','Pending'),(14,14,'Cash','2026-06-15 07:25:00','Failed'),(15,15,'Card','2026-06-16 07:25:00','Success'),(16,16,'Cash','2026-06-17 07:25:00','Pending'),(17,17,'Card','2026-06-18 07:25:00','Failed'),(18,18,'Cash','2026-06-19 07:25:00','Success'),(19,19,'Card','2026-06-20 07:25:00','Pending'),(20,20,'Cash','2026-06-21 07:25:00','Failed'),(21,21,'Card','2026-06-22 07:25:00','Success'),(22,22,'Cash','2026-06-23 07:25:00','Pending'),(23,23,'Card','2026-06-24 07:25:00','Failed'),(24,24,'Cash','2026-06-25 07:25:00','Success'),(25,25,'Card','2026-06-26 07:25:00','Pending'),(26,26,'Cash','2026-06-27 07:25:00','Failed'),(27,27,'Card','2026-06-28 07:25:00','Success'),(28,28,'Cash','2026-06-01 07:25:00','Pending'),(29,29,'Card','2026-06-02 07:25:00','Failed'),(30,30,'Cash','2026-06-03 07:25:00','Success'),(31,31,'Card','2026-06-04 07:25:00','Pending'),(32,32,'Cash','2026-06-05 07:25:00','Failed'),(33,33,'Card','2026-06-06 07:25:00','Success'),(34,34,'Cash','2026-06-07 07:25:00','Pending'),(35,35,'Card','2026-06-08 07:25:00','Failed'),(36,36,'Cash','2026-06-09 07:25:00','Success'),(37,37,'Card','2026-06-10 07:25:00','Pending'),(38,38,'Cash','2026-06-11 07:25:00','Failed'),(39,39,'Card','2026-06-12 07:25:00','Success'),(40,40,'Cash','2026-06-13 07:25:00','Pending'),(41,41,'Card','2026-06-14 07:25:00','Failed'),(42,42,'Cash','2026-06-15 07:25:00','Success'),(43,43,'Card','2026-06-16 07:25:00','Pending'),(44,44,'Cash','2026-06-17 07:25:00','Failed'),(45,45,'Card','2026-06-18 07:25:00','Success'),(46,46,'Cash','2026-06-19 07:25:00','Pending'),(47,47,'Card','2026-06-20 07:25:00','Failed'),(48,48,'Cash','2026-06-21 07:25:00','Success'),(49,49,'Card','2026-06-22 07:25:00','Pending'),(50,50,'Cash','2026-06-23 07:25:00','Failed');
+/*!40000 ALTER TABLE `payments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `places`
+--
+
+DROP TABLE IF EXISTS `places`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `places` (
+  `place_id` int NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `description` text,
+  `price` varchar(50) DEFAULT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`place_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `places`
+--
+
+LOCK TABLES `places` WRITE;
+/*!40000 ALTER TABLE `places` DISABLE KEYS */;
+INSERT INTO `places` VALUES (1,'Wisata Jakarta Spot 1','Jakarta','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','175000','https://example.com/images/place_1.jpg'),(2,'Wisata Surabaya Spot 2','Surabaya','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','200000','https://example.com/images/place_2.jpg'),(3,'Wisata Bandung Spot 3','Bandung','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','225000','https://example.com/images/place_3.jpg'),(4,'Wisata Yogyakarta Spot 4','Yogyakarta','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','250000','https://example.com/images/place_4.jpg'),(5,'Wisata Bali Spot 5','Bali','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','275000','https://example.com/images/place_5.jpg'),(6,'Wisata Medan Spot 6','Medan','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','300000','https://example.com/images/place_6.jpg'),(7,'Wisata Semarang Spot 7','Semarang','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','325000','https://example.com/images/place_7.jpg'),(8,'Wisata Makassar Spot 8','Makassar','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','350000','https://example.com/images/place_8.jpg'),(9,'Wisata Palembang Spot 9','Palembang','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','375000','https://example.com/images/place_9.jpg'),(10,'Wisata Lombok Spot 10','Lombok','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','400000','https://example.com/images/place_10.jpg'),(11,'Wisata Malang Spot 11','Malang','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','425000','https://example.com/images/place_11.jpg'),(12,'Wisata Solo Spot 12','Solo','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','450000','https://example.com/images/place_12.jpg'),(13,'Wisata Padang Spot 13','Padang','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','475000','https://example.com/images/place_13.jpg'),(14,'Wisata Pekanbaru Spot 14','Pekanbaru','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','500000','https://example.com/images/place_14.jpg'),(15,'Wisata Balikpapan Spot 15','Balikpapan','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','525000','https://example.com/images/place_15.jpg'),(16,'Wisata Manado Spot 16','Manado','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','550000','https://example.com/images/place_16.jpg'),(17,'Wisata Banjarmasin Spot 17','Banjarmasin','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','575000','https://example.com/images/place_17.jpg'),(18,'Wisata Pontianak Spot 18','Pontianak','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','600000','https://example.com/images/place_18.jpg'),(19,'Wisata Batam Spot 19','Batam','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','625000','https://example.com/images/place_19.jpg'),(20,'Wisata Bogor Spot 20','Bogor','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','650000','https://example.com/images/place_20.jpg'),(21,'Wisata Jakarta Spot 21','Jakarta','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','675000','https://example.com/images/place_21.jpg'),(22,'Wisata Surabaya Spot 22','Surabaya','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','700000','https://example.com/images/place_22.jpg'),(23,'Wisata Bandung Spot 23','Bandung','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','725000','https://example.com/images/place_23.jpg'),(24,'Wisata Yogyakarta Spot 24','Yogyakarta','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','750000','https://example.com/images/place_24.jpg'),(25,'Wisata Bali Spot 25','Bali','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','775000','https://example.com/images/place_25.jpg'),(26,'Wisata Medan Spot 26','Medan','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','800000','https://example.com/images/place_26.jpg'),(27,'Wisata Semarang Spot 27','Semarang','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','825000','https://example.com/images/place_27.jpg'),(28,'Wisata Makassar Spot 28','Makassar','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','850000','https://example.com/images/place_28.jpg'),(29,'Wisata Palembang Spot 29','Palembang','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','875000','https://example.com/images/place_29.jpg'),(30,'Wisata Lombok Spot 30','Lombok','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','900000','https://example.com/images/place_30.jpg'),(31,'Wisata Malang Spot 31','Malang','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','925000','https://example.com/images/place_31.jpg'),(32,'Wisata Solo Spot 32','Solo','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','950000','https://example.com/images/place_32.jpg'),(33,'Wisata Padang Spot 33','Padang','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','975000','https://example.com/images/place_33.jpg'),(34,'Wisata Pekanbaru Spot 34','Pekanbaru','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1000000','https://example.com/images/place_34.jpg'),(35,'Wisata Balikpapan Spot 35','Balikpapan','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1025000','https://example.com/images/place_35.jpg'),(36,'Wisata Manado Spot 36','Manado','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1050000','https://example.com/images/place_36.jpg'),(37,'Wisata Banjarmasin Spot 37','Banjarmasin','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1075000','https://example.com/images/place_37.jpg'),(38,'Wisata Pontianak Spot 38','Pontianak','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1100000','https://example.com/images/place_38.jpg'),(39,'Wisata Batam Spot 39','Batam','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1125000','https://example.com/images/place_39.jpg'),(40,'Wisata Bogor Spot 40','Bogor','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1150000','https://example.com/images/place_40.jpg'),(41,'Wisata Jakarta Spot 41','Jakarta','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1175000','https://example.com/images/place_41.jpg'),(42,'Wisata Surabaya Spot 42','Surabaya','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1200000','https://example.com/images/place_42.jpg'),(43,'Wisata Bandung Spot 43','Bandung','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1225000','https://example.com/images/place_43.jpg'),(44,'Wisata Yogyakarta Spot 44','Yogyakarta','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1250000','https://example.com/images/place_44.jpg'),(45,'Wisata Bali Spot 45','Bali','Wisata Bahari','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1275000','https://example.com/images/place_45.jpg'),(46,'Wisata Medan Spot 46','Medan','Wisata Kuliner','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1300000','https://example.com/images/place_46.jpg'),(47,'Wisata Semarang Spot 47','Semarang','Wisata Budaya','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1325000','https://example.com/images/place_47.jpg'),(48,'Wisata Makassar Spot 48','Makassar','Taman Hiburan','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1350000','https://example.com/images/place_48.jpg'),(49,'Wisata Palembang Spot 49','Palembang','Wisata Alam','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1375000','https://example.com/images/place_49.jpg'),(50,'Wisata Lombok Spot 50','Lombok','Wisata Sejarah','Nikmati keindahan tempat wisata dengan pemandangan menakjubkan.','1400000','https://example.com/images/place_50.jpg');
+/*!40000 ALTER TABLE `places` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reviews`
+--
+
+DROP TABLE IF EXISTS `reviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reviews` (
+  `review_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `place_id` int DEFAULT NULL,
+  `rating` varchar(10) DEFAULT NULL,
+  `comment` text,
+  `review_date` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`review_id`),
+  KEY `user_id` (`user_id`),
+  KEY `place_id` (`place_id`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`place_id`) REFERENCES `places` (`place_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reviews`
+--
+
+LOCK TABLES `reviews` WRITE;
+/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
+INSERT INTO `reviews` VALUES (1,1,3,'5','Tempatnya indah dan bersih.','2026-05-02 03:30:00'),(2,2,6,'5','Pelayanan lumayan oke.','2026-05-03 03:30:00'),(3,3,9,'3','Pemandangan luar biasa!','2026-05-04 03:30:00'),(4,4,12,'5','Sangat direkomendasikan untuk keluarga.','2026-05-05 03:30:00'),(5,5,15,'4','Sangat memuaskan!','2026-05-06 03:30:00'),(6,6,18,'5','Tempatnya indah dan bersih.','2026-05-07 03:30:00'),(7,7,21,'4','Pelayanan lumayan oke.','2026-05-08 03:30:00'),(8,8,24,'4','Pemandangan luar biasa!','2026-05-09 03:30:00'),(9,9,27,'5','Sangat direkomendasikan untuk keluarga.','2026-05-10 03:30:00'),(10,10,30,'4','Sangat memuaskan!','2026-05-11 03:30:00'),(11,11,33,'3','Tempatnya indah dan bersih.','2026-05-12 03:30:00'),(12,12,36,'5','Pelayanan lumayan oke.','2026-05-13 03:30:00'),(13,13,39,'5','Pemandangan luar biasa!','2026-05-14 03:30:00'),(14,14,42,'3','Sangat direkomendasikan untuk keluarga.','2026-05-15 03:30:00'),(15,15,45,'4','Sangat memuaskan!','2026-05-16 03:30:00'),(16,16,48,'5','Tempatnya indah dan bersih.','2026-05-17 03:30:00'),(17,17,1,'5','Pelayanan lumayan oke.','2026-05-18 03:30:00'),(18,18,4,'4','Pemandangan luar biasa!','2026-05-19 03:30:00'),(19,19,7,'3','Sangat direkomendasikan untuk keluarga.','2026-05-20 03:30:00'),(20,20,10,'5','Sangat memuaskan!','2026-05-21 03:30:00'),(21,21,13,'5','Tempatnya indah dan bersih.','2026-05-22 03:30:00'),(22,22,16,'4','Pelayanan lumayan oke.','2026-05-23 03:30:00'),(23,23,19,'3','Pemandangan luar biasa!','2026-05-24 03:30:00'),(24,24,22,'5','Sangat direkomendasikan untuk keluarga.','2026-05-25 03:30:00'),(25,25,25,'4','Sangat memuaskan!','2026-05-26 03:30:00'),(26,26,28,'5','Tempatnya indah dan bersih.','2026-05-27 03:30:00'),(27,27,31,'5','Pelayanan lumayan oke.','2026-05-28 03:30:00'),(28,28,34,'4','Pemandangan luar biasa!','2026-05-01 03:30:00'),(29,29,37,'5','Sangat direkomendasikan untuk keluarga.','2026-05-02 03:30:00'),(30,30,40,'3','Sangat memuaskan!','2026-05-03 03:30:00'),(31,31,43,'4','Tempatnya indah dan bersih.','2026-05-04 03:30:00'),(32,32,46,'5','Pelayanan lumayan oke.','2026-05-05 03:30:00'),(33,33,49,'4','Pemandangan luar biasa!','2026-05-06 03:30:00'),(34,34,2,'5','Sangat direkomendasikan untuk keluarga.','2026-05-07 03:30:00'),(35,35,5,'4','Sangat memuaskan!','2026-05-08 03:30:00'),(36,36,8,'3','Tempatnya indah dan bersih.','2026-05-09 03:30:00'),(37,37,11,'4','Pelayanan lumayan oke.','2026-05-10 03:30:00'),(38,38,14,'5','Pemandangan luar biasa!','2026-05-11 03:30:00'),(39,39,17,'5','Sangat direkomendasikan untuk keluarga.','2026-05-12 03:30:00'),(40,40,20,'4','Sangat memuaskan!','2026-05-13 03:30:00'),(41,41,23,'4','Tempatnya indah dan bersih.','2026-05-14 03:30:00'),(42,42,26,'5','Pelayanan lumayan oke.','2026-05-15 03:30:00'),(43,43,29,'5','Pemandangan luar biasa!','2026-05-16 03:30:00'),(44,44,32,'3','Sangat direkomendasikan untuk keluarga.','2026-05-17 03:30:00'),(45,45,35,'4','Sangat memuaskan!','2026-05-18 03:30:00'),(46,46,38,'5','Tempatnya indah dan bersih.','2026-05-19 03:30:00'),(47,47,41,'4','Pelayanan lumayan oke.','2026-05-20 03:30:00'),(48,48,44,'4','Pemandangan luar biasa!','2026-05-21 03:30:00'),(49,49,47,'5','Sangat direkomendasikan untuk keluarga.','2026-05-22 03:30:00'),(50,50,50,'4','Sangat memuaskan!','2026-05-23 03:30:00');
+/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `transactiondetails`
+--
+
+DROP TABLE IF EXISTS `transactiondetails`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transactiondetails` (
+  `transaction_detail_id` int NOT NULL,
+  `transaction_id` int DEFAULT NULL,
+  `passenger_id` int DEFAULT NULL,
+  `trippergi_id` int DEFAULT NULL,
+  `ticket_price` varchar(50) DEFAULT NULL,
+  `quantity` varchar(50) DEFAULT NULL,
+  `subtotal` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`transaction_detail_id`),
+  KEY `transaction_id` (`transaction_id`),
+  KEY `passenger_id` (`passenger_id`),
+  KEY `trippergi_id` (`trippergi_id`),
+  CONSTRAINT `transactiondetails_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`transaction_id`),
+  CONSTRAINT `transactiondetails_ibfk_2` FOREIGN KEY (`passenger_id`) REFERENCES `passengers` (`passenger_id`),
+  CONSTRAINT `transactiondetails_ibfk_3` FOREIGN KEY (`trippergi_id`) REFERENCES `tripdetailspergi` (`trippergi_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transactiondetails`
+--
+
+LOCK TABLES `transactiondetails` WRITE;
+/*!40000 ALTER TABLE `transactiondetails` DISABLE KEYS */;
+INSERT INTO `transactiondetails` VALUES (1,1,1,1,'270000','1','270000'),(2,2,2,2,'290000','1','290000'),(3,3,3,3,'310000','2','620000'),(4,4,4,4,'330000','1','330000'),(5,5,5,5,'350000','1','350000'),(6,6,6,6,'370000','2','740000'),(7,7,7,7,'390000','1','390000'),(8,8,8,8,'410000','1','410000'),(9,9,9,9,'430000','2','860000'),(10,10,10,10,'450000','1','450000'),(11,11,11,11,'470000','1','470000'),(12,12,12,12,'490000','2','980000'),(13,13,13,13,'510000','1','510000'),(14,14,14,14,'530000','1','530000'),(15,15,15,15,'550000','2','1100000'),(16,16,16,16,'570000','1','570000'),(17,17,17,17,'590000','1','590000'),(18,18,18,18,'610000','2','1220000'),(19,19,19,19,'630000','1','630000'),(20,20,20,20,'650000','1','650000'),(21,21,21,21,'670000','2','1340000'),(22,22,22,22,'690000','1','690000'),(23,23,23,23,'710000','1','710000'),(24,24,24,24,'730000','2','1460000'),(25,25,25,25,'750000','1','750000'),(26,26,26,26,'770000','1','770000'),(27,27,27,27,'790000','2','1580000'),(28,28,28,28,'810000','1','810000'),(29,29,29,29,'830000','1','830000'),(30,30,30,30,'850000','2','1700000'),(31,31,31,31,'870000','1','870000'),(32,32,32,32,'890000','1','890000'),(33,33,33,33,'910000','2','1820000'),(34,34,34,34,'930000','1','930000'),(35,35,35,35,'950000','1','950000'),(36,36,36,36,'970000','2','1940000'),(37,37,37,37,'990000','1','990000'),(38,38,38,38,'1010000','1','1010000'),(39,39,39,39,'1030000','2','2060000'),(40,40,40,40,'1050000','1','1050000'),(41,41,41,41,'1070000','1','1070000'),(42,42,42,42,'1090000','2','2180000'),(43,43,43,43,'1110000','1','1110000'),(44,44,44,44,'1130000','1','1130000'),(45,45,45,45,'1150000','2','2300000'),(46,46,46,46,'1170000','1','1170000'),(47,47,47,47,'1190000','1','1190000'),(48,48,48,48,'1210000','2','2420000'),(49,49,49,49,'1230000','1','1230000'),(50,50,50,50,'1250000','1','1250000');
+/*!40000 ALTER TABLE `transactiondetails` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `transactions`
+--
+
+DROP TABLE IF EXISTS `transactions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transactions` (
+  `transaction_id` int NOT NULL,
+  `booking_id` int DEFAULT NULL,
+  `total_amount` varchar(50) DEFAULT NULL,
+  `transaction_date` timestamp NULL DEFAULT NULL,
+  `payment_status` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`transaction_id`),
+  KEY `booking_id` (`booking_id`),
+  CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`booking_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transactions`
+--
+
+LOCK TABLES `transactions` WRITE;
+/*!40000 ALTER TABLE `transactions` DISABLE KEYS */;
+INSERT INTO `transactions` VALUES (1,1,'550000','2026-06-02 07:20:00','Unpaid'),(2,2,'600000','2026-06-03 07:20:00','Pending'),(3,3,'650000','2026-06-04 07:20:00','Refunded'),(4,4,'700000','2026-06-05 07:20:00','Paid'),(5,5,'750000','2026-06-06 07:20:00','Unpaid'),(6,6,'800000','2026-06-07 07:20:00','Pending'),(7,7,'850000','2026-06-08 07:20:00','Refunded'),(8,8,'900000','2026-06-09 07:20:00','Paid'),(9,9,'950000','2026-06-10 07:20:00','Unpaid'),(10,10,'1000000','2026-06-11 07:20:00','Pending'),(11,11,'1050000','2026-06-12 07:20:00','Refunded'),(12,12,'1100000','2026-06-13 07:20:00','Paid'),(13,13,'1150000','2026-06-14 07:20:00','Unpaid'),(14,14,'1200000','2026-06-15 07:20:00','Pending'),(15,15,'1250000','2026-06-16 07:20:00','Refunded'),(16,16,'1300000','2026-06-17 07:20:00','Paid'),(17,17,'1350000','2026-06-18 07:20:00','Unpaid'),(18,18,'1400000','2026-06-19 07:20:00','Pending'),(19,19,'1450000','2026-06-20 07:20:00','Refunded'),(20,20,'1500000','2026-06-21 07:20:00','Paid'),(21,21,'1550000','2026-06-22 07:20:00','Unpaid'),(22,22,'1600000','2026-06-23 07:20:00','Pending'),(23,23,'1650000','2026-06-24 07:20:00','Refunded'),(24,24,'1700000','2026-06-25 07:20:00','Paid'),(25,25,'1750000','2026-06-26 07:20:00','Unpaid'),(26,26,'1800000','2026-06-27 07:20:00','Pending'),(27,27,'1850000','2026-06-28 07:20:00','Refunded'),(28,28,'1900000','2026-06-01 07:20:00','Paid'),(29,29,'1950000','2026-06-02 07:20:00','Unpaid'),(30,30,'2000000','2026-06-03 07:20:00','Pending'),(31,31,'2050000','2026-06-04 07:20:00','Refunded'),(32,32,'2100000','2026-06-05 07:20:00','Paid'),(33,33,'2150000','2026-06-06 07:20:00','Unpaid'),(34,34,'2200000','2026-06-07 07:20:00','Pending'),(35,35,'2250000','2026-06-08 07:20:00','Refunded'),(36,36,'2300000','2026-06-09 07:20:00','Paid'),(37,37,'2350000','2026-06-10 07:20:00','Unpaid'),(38,38,'2400000','2026-06-11 07:20:00','Pending'),(39,39,'2450000','2026-06-12 07:20:00','Refunded'),(40,40,'2500000','2026-06-13 07:20:00','Paid'),(41,41,'2550000','2026-06-14 07:20:00','Unpaid'),(42,42,'2600000','2026-06-15 07:20:00','Pending'),(43,43,'2650000','2026-06-16 07:20:00','Refunded'),(44,44,'2700000','2026-06-17 07:20:00','Paid'),(45,45,'2750000','2026-06-18 07:20:00','Unpaid'),(46,46,'2800000','2026-06-19 07:20:00','Pending'),(47,47,'2850000','2026-06-20 07:20:00','Refunded'),(48,48,'2900000','2026-06-21 07:20:00','Paid'),(49,49,'2950000','2026-06-22 07:20:00','Unpaid'),(50,50,'3000000','2026-06-23 07:20:00','Pending');
+/*!40000 ALTER TABLE `transactions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tripdetailspergi`
+--
+
+DROP TABLE IF EXISTS `tripdetailspergi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tripdetailspergi` (
+  `trippergi_id` int NOT NULL,
+  `booking_id` int DEFAULT NULL,
+  `origin_id` int DEFAULT NULL,
+  `destination_id` int DEFAULT NULL,
+  `travel_date` varchar(50) DEFAULT NULL,
+  `departure_date` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`trippergi_id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `origin_id` (`origin_id`),
+  KEY `destination_id` (`destination_id`),
+  CONSTRAINT `tripdetailspergi_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`booking_id`),
+  CONSTRAINT `tripdetailspergi_ibfk_2` FOREIGN KEY (`origin_id`) REFERENCES `places` (`place_id`),
+  CONSTRAINT `tripdetailspergi_ibfk_3` FOREIGN KEY (`destination_id`) REFERENCES `places` (`place_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tripdetailspergi`
+--
+
+LOCK TABLES `tripdetailspergi` WRITE;
+/*!40000 ALTER TABLE `tripdetailspergi` DISABLE KEYS */;
+INSERT INTO `tripdetailspergi` VALUES (1,1,1,2,'2026-07-02','2026-07-02 08:00:00'),(2,2,2,3,'2026-07-03','2026-07-03 08:00:00'),(3,3,3,4,'2026-07-04','2026-07-04 08:00:00'),(4,4,4,5,'2026-07-05','2026-07-05 08:00:00'),(5,5,5,6,'2026-07-06','2026-07-06 08:00:00'),(6,6,6,7,'2026-07-07','2026-07-07 08:00:00'),(7,7,7,8,'2026-07-08','2026-07-08 08:00:00'),(8,8,8,9,'2026-07-09','2026-07-09 08:00:00'),(9,9,9,10,'2026-07-10','2026-07-10 08:00:00'),(10,10,10,11,'2026-07-11','2026-07-11 08:00:00'),(11,11,11,12,'2026-07-12','2026-07-12 08:00:00'),(12,12,12,13,'2026-07-13','2026-07-13 08:00:00'),(13,13,13,14,'2026-07-14','2026-07-14 08:00:00'),(14,14,14,15,'2026-07-15','2026-07-15 08:00:00'),(15,15,15,16,'2026-07-16','2026-07-16 08:00:00'),(16,16,16,17,'2026-07-17','2026-07-17 08:00:00'),(17,17,17,18,'2026-07-18','2026-07-18 08:00:00'),(18,18,18,19,'2026-07-19','2026-07-19 08:00:00'),(19,19,19,20,'2026-07-20','2026-07-20 08:00:00'),(20,20,20,21,'2026-07-21','2026-07-21 08:00:00'),(21,21,21,22,'2026-07-22','2026-07-22 08:00:00'),(22,22,22,23,'2026-07-23','2026-07-23 08:00:00'),(23,23,23,24,'2026-07-24','2026-07-24 08:00:00'),(24,24,24,25,'2026-07-25','2026-07-25 08:00:00'),(25,25,25,26,'2026-07-26','2026-07-26 08:00:00'),(26,26,26,27,'2026-07-27','2026-07-27 08:00:00'),(27,27,27,28,'2026-07-28','2026-07-28 08:00:00'),(28,28,28,29,'2026-07-01','2026-07-01 08:00:00'),(29,29,29,30,'2026-07-02','2026-07-02 08:00:00'),(30,30,30,31,'2026-07-03','2026-07-03 08:00:00'),(31,31,31,32,'2026-07-04','2026-07-04 08:00:00'),(32,32,32,33,'2026-07-05','2026-07-05 08:00:00'),(33,33,33,34,'2026-07-06','2026-07-06 08:00:00'),(34,34,34,35,'2026-07-07','2026-07-07 08:00:00'),(35,35,35,36,'2026-07-08','2026-07-08 08:00:00'),(36,36,36,37,'2026-07-09','2026-07-09 08:00:00'),(37,37,37,38,'2026-07-10','2026-07-10 08:00:00'),(38,38,38,39,'2026-07-11','2026-07-11 08:00:00'),(39,39,39,40,'2026-07-12','2026-07-12 08:00:00'),(40,40,40,41,'2026-07-13','2026-07-13 08:00:00'),(41,41,41,42,'2026-07-14','2026-07-14 08:00:00'),(42,42,42,43,'2026-07-15','2026-07-15 08:00:00'),(43,43,43,44,'2026-07-16','2026-07-16 08:00:00'),(44,44,44,45,'2026-07-17','2026-07-17 08:00:00'),(45,45,45,46,'2026-07-18','2026-07-18 08:00:00'),(46,46,46,47,'2026-07-19','2026-07-19 08:00:00'),(47,47,47,48,'2026-07-20','2026-07-20 08:00:00'),(48,48,48,49,'2026-07-21','2026-07-21 08:00:00'),(49,49,49,50,'2026-07-22','2026-07-22 08:00:00'),(50,50,50,1,'2026-07-23','2026-07-23 08:00:00');
+/*!40000 ALTER TABLE `tripdetailspergi` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tripdetailspulang`
+--
+
+DROP TABLE IF EXISTS `tripdetailspulang`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tripdetailspulang` (
+  `trippulang_id` int NOT NULL,
+  `booking_id` int DEFAULT NULL,
+  `origin_id` int DEFAULT NULL,
+  `destination_id` int DEFAULT NULL,
+  `travel_date` varchar(50) DEFAULT NULL,
+  `departure_date` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`trippulang_id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `origin_id` (`origin_id`),
+  KEY `destination_id` (`destination_id`),
+  CONSTRAINT `tripdetailspulang_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`booking_id`),
+  CONSTRAINT `tripdetailspulang_ibfk_2` FOREIGN KEY (`origin_id`) REFERENCES `places` (`place_id`),
+  CONSTRAINT `tripdetailspulang_ibfk_3` FOREIGN KEY (`destination_id`) REFERENCES `places` (`place_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tripdetailspulang`
+--
+
+LOCK TABLES `tripdetailspulang` WRITE;
+/*!40000 ALTER TABLE `tripdetailspulang` DISABLE KEYS */;
+INSERT INTO `tripdetailspulang` VALUES (1,1,2,1,'2026-07-04','2026-07-04 16:00:00'),(2,2,3,2,'2026-07-05','2026-07-05 16:00:00'),(3,3,4,3,'2026-07-06','2026-07-06 16:00:00'),(4,4,5,4,'2026-07-07','2026-07-07 16:00:00'),(5,5,6,5,'2026-07-08','2026-07-08 16:00:00'),(6,6,7,6,'2026-07-09','2026-07-09 16:00:00'),(7,7,8,7,'2026-07-10','2026-07-10 16:00:00'),(8,8,9,8,'2026-07-11','2026-07-11 16:00:00'),(9,9,10,9,'2026-07-12','2026-07-12 16:00:00'),(10,10,11,10,'2026-07-13','2026-07-13 16:00:00'),(11,11,12,11,'2026-07-14','2026-07-14 16:00:00'),(12,12,13,12,'2026-07-15','2026-07-15 16:00:00'),(13,13,14,13,'2026-07-16','2026-07-16 16:00:00'),(14,14,15,14,'2026-07-17','2026-07-17 16:00:00'),(15,15,16,15,'2026-07-18','2026-07-18 16:00:00'),(16,16,17,16,'2026-07-19','2026-07-19 16:00:00'),(17,17,18,17,'2026-07-20','2026-07-20 16:00:00'),(18,18,19,18,'2026-07-21','2026-07-21 16:00:00'),(19,19,20,19,'2026-07-22','2026-07-22 16:00:00'),(20,20,21,20,'2026-07-23','2026-07-23 16:00:00'),(21,21,22,21,'2026-07-24','2026-07-24 16:00:00'),(22,22,23,22,'2026-07-25','2026-07-25 16:00:00'),(23,23,24,23,'2026-07-26','2026-07-26 16:00:00'),(24,24,25,24,'2026-07-27','2026-07-27 16:00:00'),(25,25,26,25,'2026-07-28','2026-07-28 16:00:00'),(26,26,27,26,'2026-07-01','2026-07-01 16:00:00'),(27,27,28,27,'2026-07-02','2026-07-02 16:00:00'),(28,28,29,28,'2026-07-03','2026-07-03 16:00:00'),(29,29,30,29,'2026-07-04','2026-07-04 16:00:00'),(30,30,31,30,'2026-07-05','2026-07-05 16:00:00'),(31,31,32,31,'2026-07-06','2026-07-06 16:00:00'),(32,32,33,32,'2026-07-07','2026-07-07 16:00:00'),(33,33,34,33,'2026-07-08','2026-07-08 16:00:00'),(34,34,35,34,'2026-07-09','2026-07-09 16:00:00'),(35,35,36,35,'2026-07-10','2026-07-10 16:00:00'),(36,36,37,36,'2026-07-11','2026-07-11 16:00:00'),(37,37,38,37,'2026-07-12','2026-07-12 16:00:00'),(38,38,39,38,'2026-07-13','2026-07-13 16:00:00'),(39,39,40,39,'2026-07-14','2026-07-14 16:00:00'),(40,40,41,40,'2026-07-15','2026-07-15 16:00:00'),(41,41,42,41,'2026-07-16','2026-07-16 16:00:00'),(42,42,43,42,'2026-07-17','2026-07-17 16:00:00'),(43,43,44,43,'2026-07-18','2026-07-18 16:00:00'),(44,44,45,44,'2026-07-19','2026-07-19 16:00:00'),(45,45,46,45,'2026-07-20','2026-07-20 16:00:00'),(46,46,47,46,'2026-07-21','2026-07-21 16:00:00'),(47,47,48,47,'2026-07-22','2026-07-22 16:00:00'),(48,48,49,48,'2026-07-23','2026-07-23 16:00:00'),(49,49,50,49,'2026-07-24','2026-07-24 16:00:00'),(50,50,1,50,'2026-07-25','2026-07-25 16:00:00');
+/*!40000 ALTER TABLE `tripdetailspulang` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'Budi Santoso','budi.santoso1@example.com','pass_1123','081234567001','Jl. Merdeka No. 1, Surabaya'),(2,'Siti Rahayu','siti.rahayu2@example.com','pass_2123','081234567002','Jl. Merdeka No. 2, Bandung'),(3,'Agus Setiawan','agus.setiawan3@example.com','pass_3123','081234567003','Jl. Merdeka No. 3, Yogyakarta'),(4,'Dewi Lestari','dewi.lestari4@example.com','pass_4123','081234567004','Jl. Merdeka No. 4, Bali'),(5,'Eko Pratama','eko.pratama5@example.com','pass_5123','081234567005','Jl. Merdeka No. 5, Medan'),(6,'Rina Wulandari','rina.wulandari6@example.com','pass_6123','081234567006','Jl. Merdeka No. 6, Semarang'),(7,'Rudi Hidayat','rudi.hidayat7@example.com','pass_7123','081234567007','Jl. Merdeka No. 7, Makassar'),(8,'Sari Kusuma','sari.kusuma8@example.com','pass_8123','081234567008','Jl. Merdeka No. 8, Palembang'),(9,'Ahmad Saputra','ahmad.saputra9@example.com','pass_9123','081234567009','Jl. Merdeka No. 9, Lombok'),(10,'Lani Wijaya','lani.wijaya10@example.com','pass_10123','081234567010','Jl. Merdeka No. 10, Malang'),(11,'Doni Utami','doni.utami11@example.com','pass_11123','081234567011','Jl. Merdeka No. 11, Solo'),(12,'Maya Nugroho','maya.nugroho12@example.com','pass_12123','081234567012','Jl. Merdeka No. 12, Padang'),(13,'Andi Suryani','andi.suryani13@example.com','pass_13123','081234567013','Jl. Merdeka No. 13, Pekanbaru'),(14,'Fitri Firmansyah','fitri.firmansyah14@example.com','pass_14123','081234567014','Jl. Merdeka No. 14, Balikpapan'),(15,'Hendra Permata','hendra.permata15@example.com','pass_15123','081234567015','Jl. Merdeka No. 15, Manado'),(16,'Nia Purnama','nia.purnama16@example.com','pass_16123','081234567016','Jl. Merdeka No. 16, Banjarmasin'),(17,'Bambang Kurniawan','bambang.kurniawan17@example.com','pass_17123','081234567017','Jl. Merdeka No. 17, Pontianak'),(18,'Dian Suharto','dian.suharto18@example.com','pass_18123','081234567018','Jl. Merdeka No. 18, Batam'),(19,'Joko Kartika','joko.kartika19@example.com','pass_19123','081234567019','Jl. Merdeka No. 19, Bogor'),(20,'Titi Astuti','titi.astuti20@example.com','pass_20123','081234567020','Jl. Merdeka No. 20, Jakarta'),(21,'Gita Ramadhan','gita.ramadhan21@example.com','pass_21123','081234567021','Jl. Merdeka No. 21, Surabaya'),(22,'Fajar Siregar','fajar.siregar22@example.com','pass_22123','081234567022','Jl. Merdeka No. 22, Bandung'),(23,'Indah Nasution','indah.nasution23@example.com','pass_23123','081234567023','Jl. Merdeka No. 23, Yogyakarta'),(24,'Rian Situmorang','rian.situmorang24@example.com','pass_24123','081234567024','Jl. Merdeka No. 24, Bali'),(25,'Yuni Ginting','yuni.ginting25@example.com','pass_25123','081234567025','Jl. Merdeka No. 25, Medan'),(26,'Reza Simanjuntak','reza.simanjuntak26@example.com','pass_26123','081234567026','Jl. Merdeka No. 26, Semarang'),(27,'Siska Hutapea','siska.hutapea27@example.com','pass_27123','081234567027','Jl. Merdeka No. 27, Makassar'),(28,'Dedi Hasibuan','dedi.hasibuan28@example.com','pass_28123','081234567028','Jl. Merdeka No. 28, Palembang'),(29,'Ayu Lubis','ayu.lubis29@example.com','pass_29123','081234567029','Jl. Merdeka No. 29, Lombok'),(30,'Irfan Pane','irfan.pane30@example.com','pass_30123','081234567030','Jl. Merdeka No. 30, Malang'),(31,'Mega Wibowo','mega.wibowo31@example.com','pass_31123','081234567031','Jl. Merdeka No. 31, Solo'),(32,'Adit Sutrisno','adit.sutrisno32@example.com','pass_32123','081234567032','Jl. Merdeka No. 32, Padang'),(33,'Rika Gunawan','rika.gunawan33@example.com','pass_33123','081234567033','Jl. Merdeka No. 33, Pekanbaru'),(34,'Bayu Susanto','bayu.susanto34@example.com','pass_34123','081234567034','Jl. Merdeka No. 34, Balikpapan'),(35,'Lia Triyono','lia.triyono35@example.com','pass_35123','081234567035','Jl. Merdeka No. 35, Manado'),(36,'Aris Supriyanto','aris.supriyanto36@example.com','pass_36123','081234567036','Jl. Merdeka No. 36, Banjarmasin'),(37,'Wulan Effendi','wulan.effendi37@example.com','pass_37123','081234567037','Jl. Merdeka No. 37, Pontianak'),(38,'Taufik Bachtiar','taufik.bachtiar38@example.com','pass_38123','081234567038','Jl. Merdeka No. 38, Batam'),(39,'Nita Zulkarnain','nita.zulkarnain39@example.com','pass_39123','081234567039','Jl. Merdeka No. 39, Bogor'),(40,'Hary Mahendra','hary.mahendra40@example.com','pass_40123','081234567040','Jl. Merdeka No. 40, Jakarta'),(41,'Siska Darmawan','siska.darmawan41@example.com','pass_41123','081234567041','Jl. Merdeka No. 41, Surabaya'),(42,'Gilang Kusumo','gilang.kusumo42@example.com','pass_42123','081234567042','Jl. Merdeka No. 42, Bandung'),(43,'Ratih Sudrajat','ratih.sudrajat43@example.com','pass_43123','081234567043','Jl. Merdeka No. 43, Yogyakarta'),(44,'Dimas Prakoso','dimas.prakoso44@example.com','pass_44123','081234567044','Jl. Merdeka No. 44, Bali'),(45,'Tari Setyawan','tari.setyawan45@example.com','pass_45123','081234567045','Jl. Merdeka No. 45, Medan'),(46,'Kiki Budiman','kiki.budiman46@example.com','pass_46123','081234567046','Jl. Merdeka No. 46, Semarang'),(47,'Vina Subagyo','vina.subagyo47@example.com','pass_47123','081234567047','Jl. Merdeka No. 47, Makassar'),(48,'Fikri Suwandi','fikri.suwandi48@example.com','pass_48123','081234567048','Jl. Merdeka No. 48, Palembang'),(49,'Nanda Triadi','nanda.triadi49@example.com','pass_49123','081234567049','Jl. Merdeka No. 49, Lombok'),(50,'Rizal Handoko','rizal.handoko50@example.com','pass_50123','081234567050','Jl. Merdeka No. 50, Malang');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping routines for database 'travel_projectdigabung'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-10-04 20:11:43

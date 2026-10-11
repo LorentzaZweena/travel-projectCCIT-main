@@ -90,7 +90,7 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             <a href="bookingMenu.php" class="nav-link-custom">
                 <i class="bi bi-journal-bookmark-fill"></i> <span>Booking</span>
             </a>
-            <a href="reviews.php" class="nav-link-custom">
+            <a href="reviewsMenu.php" class="nav-link-custom">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
             </a>
         </nav>

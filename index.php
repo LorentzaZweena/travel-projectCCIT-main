@@ -1,12 +1,22 @@
 <?php
     session_start();
     require_once 'koneksi.php';
+    
     $query = "SELECT * FROM places ORDER BY place_id ASC LIMIT 6";
     $result = $conn->query($query);
 
     $query_reviews = "SELECT r.*, u.name AS user_name, p.name AS place_name FROM reviews r LEFT JOIN users u ON r.user_id = u.user_id LEFT JOIN places p ON r.place_id = p.place_id ORDER BY r.review_date DESC";
-    
     $result_reviews = $conn->query($query_reviews);
+
+    $query_map = "SELECT place_id, name, location, category, description, price, image_url, latitude, longitude FROM places WHERE latitude IS NOT NULL AND longitude IS NOT NULL";
+    $res_map = $conn->query($query_map);
+
+    $places_data = [];
+    if ($res_map && $res_map->num_rows > 0) {
+        while ($row = $res_map->fetch_assoc()) {
+            $places_data[] = $row;
+        }
+    }
 ?>
 
 <!DOCTYPE html>
@@ -184,22 +194,20 @@
       </p>
     </div>
 
-    <!-- Filter Pulau (Sudah Aktif) -->
+    <!-- Filter Pulau/Kota (100% DINAMIS DARI DATABASE MYSQL) -->
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-4" id="mapFilters">
       <button class="map-filter-btn active" onclick="flyToLocation('indonesia', this)">
-        <i class="fa-solid fa-globe me-1"></i> All Islands
+        <i class="fa-solid fa-globe me-1"></i> Semua Lokasi
       </button>
-      <button class="map-filter-btn" onclick="flyToLocation('bali', this)">Bali</button>
-      <button class="map-filter-btn" onclick="flyToLocation('rajaampat', this)">Raja Ampat</button>
-      <button class="map-filter-btn" onclick="flyToLocation('komodo', this)">Komodo</button>
-      <button class="map-filter-btn" onclick="flyToLocation('bromo', this)">Bromo</button>
-      <button class="map-filter-btn" onclick="flyToLocation('laketoba', this)">Lake Toba</button>
-      <button class="map-filter-btn" onclick="flyToLocation('lombok', this)">Lombok</button>
-      <button class="map-filter-btn" onclick="flyToLocation('sumba', this)">Sumba</button>
+      <?php foreach (array_slice($places_data, 0, 8) as $p): ?>
+        <button class="map-filter-btn" onclick="flyToLocation('<?= htmlspecialchars($p['name']); ?>', this)">
+          <?= htmlspecialchars($p['location']); ?>
+        </button>
+      <?php endforeach; ?>
     </div>
 
     <div class="row g-4 align-items-stretch">
-      <!-- Kolom Map (Ukurannya Digedein Kebawah Sejajar) -->
+      <!-- Kolom Map -->
       <div class="col-lg-8">
         <div class="geomap-container h-100" style="min-height: 680px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
           <div id="map" style="height: 100%; min-height: 680px; width: 100%;"></div>
@@ -215,10 +223,10 @@
             <div class="fw-bold text-white small mb-2"><i class="fa-solid fa-route text-info me-2"></i>Cari Rute Perjalanan</div>
             
             <div class="mb-2">
-              <input type="text" id="originInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Mau darimana? (cth: Bogor)" value="Bogor">
+              <input type="text" id="originInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Mau darimana? (cth: Jakarta)" value="Jakarta">
             </div>
             <div class="mb-2">
-              <input type="text" id="destInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Destinasi (cth: Monas / Jakarta Selatan)" value="Monas">
+              <input type="text" id="destInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Destinasi (cth: Bandung)" value="<?= !empty($places_data[0]['name']) ? htmlspecialchars($places_data[0]['name']) : 'Surabaya'; ?>">
             </div>
 
             <!-- Pilihan Moda Transportasi -->
@@ -241,61 +249,45 @@
               <i class="fa-solid fa-magnifying-glass-location me-1"></i> Temukan Rute Jalan
             </button>
 
-            <!-- Box Petunjuk Jalan ala Google Maps -->
+            <!-- Box Petunjuk Jalan -->
             <div id="routeInfoBox" class="mt-2 p-2 rounded bg-dark text-light small d-none">
               <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-1 mb-2">
                 <span id="routeDist" class="fw-bold text-info fs-6">0 km</span>
                 <span id="routeTime" class="badge bg-warning text-dark fw-bold">0 menit</span>
               </div>
               <div id="routeInstructions" style="max-height: 180px; overflow-y: auto; font-size: 0.75rem;" class="text-light pe-1">
-                <!-- Step belok-belok ala Google Maps muncul di sini -->
               </div>
             </div>
           </div>
 
-          <!-- Top Destinations -->
+          <!-- Top Destinations (100% DINAMIS DARI DATABASE MYSQL) -->
           <div>
             <div class="d-flex align-items-center justify-content-between mb-2 px-1">
               <span class="fw-bold text-white small"><i class="fa-solid fa-fire text-warning me-2"></i>Top Destinations</span>
-              <span class="badge bg-primary rounded-pill">4 Spots</span>
+              <span class="badge bg-primary rounded-pill"><?= count(array_slice($places_data, 0, 4)); ?> Spots</span>
             </div>
             
             <div class="dest-list-group">
-              <div class="dest-list-item" onclick="quickRoute('Bogor', 'Kebun Raya Bogor')">
-                <img src="https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=150&q=80" class="dest-list-img" alt="Kebun Raya Bogor">
-                <div class="flex-grow-1">
-                  <div class="fw-bold text-white small mb-1">Kebun Raya Bogor</div>
-                  <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>4.8 • Wisata Alam</div>
+              <?php 
+                $top_spots = array_slice($places_data, 0, 4);
+                if (!empty($top_spots)):
+                  foreach ($top_spots as $spot): 
+                    $img = (!empty($spot['image_url']) && str_starts_with($spot['image_url'], 'http')) 
+                      ? $spot['image_url'] 
+                      : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=150&q=80';
+              ?>
+                <div class="dest-list-item" onclick="quickRoute('Jakarta', '<?= addslashes(htmlspecialchars($spot['name'])); ?>')">
+                  <img src="<?= htmlspecialchars($img); ?>" class="dest-list-img" alt="<?= htmlspecialchars($spot['name']); ?>">
+                  <div class="flex-grow-1">
+                    <div class="fw-bold text-white small mb-1"><?= htmlspecialchars($spot['name']); ?></div>
+                    <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>4.9 • <?= htmlspecialchars($spot['category'] ?? 'Wisata'); ?></div>
+                  </div>
+                  <i class="fa-solid fa-location-arrow text-info"></i>
                 </div>
-                <i class="fa-solid fa-location-arrow text-info"></i>
-              </div>
-
-              <div class="dest-list-item" onclick="quickRoute('Jakarta', 'Monumen Nasional')">
-                <img src="https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=150&q=80" class="dest-list-img" alt="Monas">
-                <div class="flex-grow-1">
-                  <div class="fw-bold text-white small mb-1">Monumen Nasional (Monas)</div>
-                  <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>4.9 • Wisata Sejarah</div>
-                </div>
-                <i class="fa-solid fa-location-arrow text-info"></i>
-              </div>
-
-              <div class="dest-list-item" onclick="quickRoute('Yogyakarta', 'Candi Borobudur')">
-                <img src="https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=150&q=80" class="dest-list-img" alt="Borobudur">
-                <div class="flex-grow-1">
-                  <div class="fw-bold text-white small mb-1">Candi Borobudur</div>
-                  <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>5.0 • Cagar Budaya</div>
-                </div>
-                <i class="fa-solid fa-location-arrow text-info"></i>
-              </div>
-
-              <div class="dest-list-item" onclick="quickRoute('Denpasar', 'Pantai Kuta Bali')">
-                <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=150&q=80" class="dest-list-img" alt="Kuta">
-                <div class="flex-grow-1">
-                  <div class="fw-bold text-white small mb-1">Pantai Kuta Bali</div>
-                  <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>4.9 • Bahari & Sunset</div>
-                </div>
-                <i class="fa-solid fa-location-arrow text-info"></i>
-              </div>
+              <?php 
+                  endforeach; 
+                endif;
+              ?>
             </div>
           </div>
 
@@ -328,8 +320,8 @@
       <?php if ($result && $result->num_rows > 0): ?>
         <?php while ($row = $result->fetch_assoc()): ?>
           <?php 
-            $locationKey = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $row['name']));
-            $imageSrc = !empty($row['image_url']) 
+            $locationKey = htmlspecialchars($row['name']);
+            $imageSrc = (!empty($row['image_url']) && str_starts_with($row['image_url'], 'http')) 
               ? htmlspecialchars($row['image_url']) 
               : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80';
           ?>
@@ -345,7 +337,7 @@
                   </div>
                   <div class="dest-sub"><?= htmlspecialchars($row['description']); ?></div>
                 </div>
-                <div class="btn-arrow" onclick="flyToLocation('<?= $locationKey; ?>')">
+                <div class="btn-arrow" onclick="flyToLocation('<?= addslashes($locationKey); ?>')">
                   <i class="fa-solid fa-arrow-right"></i>
                 </div>
               </div>
@@ -471,15 +463,13 @@
           </ul>
         </div>
 
+        <!-- DINAMIS DARI DATABASE -->
         <div class="col-lg-3 col-md-6 mb-4 mb-lg-0 ps-lg-4">
-          <h5 class="footer-heading">Indonesian Islands</h5>
+          <h5 class="footer-heading">Top Destinations</h5>
           <ul class="footer-links">
-            <li><a href="#geomap" onclick="flyToLocation('bali')"><i class="fa-solid fa-location-dot text-info"></i> Bali Island</a></li>
-            <li><a href="#geomap" onclick="flyToLocation('rajaampat')"><i class="fa-solid fa-location-dot text-info"></i> Raja Ampat</a></li>
-            <li><a href="#geomap" onclick="flyToLocation('komodo')"><i class="fa-solid fa-location-dot text-info"></i> Komodo Island</a></li>
-            <li><a href="#geomap" onclick="flyToLocation('bromo')"><i class="fa-solid fa-location-dot text-info"></i> Mount Bromo</a></li>
-            <li><a href="#geomap" onclick="flyToLocation('laketoba')"><i class="fa-solid fa-location-dot text-info"></i> Lake Toba</a></li>
-            <li><a href="#geomap" onclick="flyToLocation('lombok')"><i class="fa-solid fa-location-dot text-info"></i> Lombok & Gili</a></li>
+            <?php foreach (array_slice($places_data, 0, 6) as $p): ?>
+              <li><a href="#geomap" onclick="flyToLocation('<?= addslashes(htmlspecialchars($p['name'])); ?>')"><i class="fa-solid fa-location-dot text-info"></i> <?= htmlspecialchars($p['name']); ?></a></li>
+            <?php endforeach; ?>
           </ul>
         </div>
 
@@ -541,7 +531,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 rounded-4 p-3">
         <div class="modal-header border-0">
-          <h5 class="modal-title fw-bold text-dark">Plan Your Indonesia Vacation</h5>
+          <h5 class="modal-title fw-bold text-dark">Plan Your Vacation</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -549,13 +539,9 @@
             <div class="mb-3">
               <label class="form-label small fw-semibold text-muted">Select Destination</label>
               <select class="form-select rounded-3 py-2" id="modalDestSelect">
-                <option value="Bali Island" selected>Bali Island</option>
-                <option value="Raja Ampat">Raja Ampat</option>
-                <option value="Komodo Island">Komodo Island</option>
-                <option value="Mount Bromo">Mount Bromo</option>
-                <option value="Lake Toba">Lake Toba</option>
-                <option value="Lombok & Gili">Lombok & Gili</option>
-                <option value="Sumba Island">Sumba Island</option>
+                <?php foreach ($places_data as $p): ?>
+                  <option value="<?= htmlspecialchars($p['name']); ?>"><?= htmlspecialchars($p['name']); ?></option>
+                <?php endforeach; ?>
               </select>
             </div>
             <div class="row g-2 mb-3">
@@ -593,40 +579,12 @@
     </div>
   </div>
 
-    <div class="modal fade" id="routeModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-bold text-dark" id="routeModalTitle">Detail Rute Perjalanan</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body p-4">
-            <div class="row g-4">
-              <div class="col-lg-7">
-                <div id="modalRouteMap" style="height: 400px; width: 100%; border-radius: 16px; overflow: hidden;" class="shadow-sm border"></div>
-              </div>
-              <div class="col-lg-5 d-flex flex-column justify-content-between">
-                <div>
-                  <div class="d-flex align-items-center justify-content-between mb-3 bg-light p-3 rounded-3">
-                    <span class="fw-bold text-dark"><i class="fa-solid fa-route text-primary me-2"></i>Jarak Tempuh:</span>
-                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="routeDistanceBadge">0 KM</span>
-                  </div>
-                  <div class="accordion accordion-flush rounded-3 border overflow-hidden" id="transportAccordion">
-
-                  </div>
-                </div>
-                <button type="button" class="btn btn-outline-secondary w-100 rounded-pill py-2 mt-3 fw-semibold" data-bs-dismiss="modal">
-                  Tutup
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/leaflet.js"></script>
+  <script>
+    const dbPlaces = <?= json_encode($places_data); ?>;
+  </script>
+  <script src="js/leaflet.js?v=<?= time(); ?>"></script>
+
 </body>
 </html>

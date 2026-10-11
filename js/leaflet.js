@@ -4,45 +4,7 @@ let originMarker = null;
 let destMarker = null;
 let selectedMode = 'driving';
 let mapMarkers = {};
-
-const locations = {
-  indonesia: { lat: -2.548926, lng: 118.014863, zoom: 5, title: "Indonesia" },
-  bali: { 
-    lat: -8.409518, lng: 115.188916, zoom: 10, title: "Bali Island", 
-    desc: "Pantai tropis, kebudayaan unik & pegunungan eksotis.", 
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=400&q=80"
-  },
-  rajaampat: { 
-    lat: -0.2333, lng: 130.5167, zoom: 9, title: "Raja Ampat", 
-    desc: "Surga menyelam dunia & gugusan pulau karang.", 
-    img: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=400&q=80"
-  },
-  komodo: { 
-    lat: -8.5583, lng: 119.4886, zoom: 10, title: "Komodo Island", 
-    desc: "Habitat komodo & pantai pasir merah muda (Pink Beach).", 
-    img: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=400&q=80"
-  },
-  bromo: { 
-    lat: -7.9425, lng: 112.9530, zoom: 11, title: "Mount Bromo", 
-    desc: "Pemandangan matahari terbit & lautan pasir membentang.", 
-    img: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=400&q=80"
-  },
-  laketoba: { 
-    lat: 2.6845, lng: 98.8756, zoom: 10, title: "Lake Toba", 
-    desc: "Danau vulkanik raksasa dengan Pulau Samosir di tengahnya.", 
-    img: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=400&q=80"
-  },
-  lombok: { 
-    lat: -8.6509, lng: 116.3249, zoom: 10, title: "Lombok & Gili", 
-    desc: "Pantai pasir putih eksotis & Gunung Rinjani.", 
-    img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=400&q=80"
-  },
-  sumba: { 
-    lat: -9.6556, lng: 120.2642, zoom: 10, title: "Sumba Island", 
-    desc: "Padang sabana luas, air terjun & kebudayaan lokal.", 
-    img: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?auto=format&fit=crop&w=400&q=80"
-  }
-};
+let placesMapKey = {};
 
 function createIslandIcon(title) {
   return L.divIcon({
@@ -87,36 +49,51 @@ window.addEventListener('load', () => {
   map = L.map('map', {
     zoomControl: true,
     scrollWheelZoom: false
-  }).setView([-6.2088, 106.8456], 9);
+  }).setView([-2.548926, 118.014863], 5);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map);
 
-  Object.keys(locations).forEach(key => {
-    if (key === 'indonesia') return;
-    const spot = locations[key];
+  if (typeof dbPlaces !== 'undefined' && dbPlaces.length > 0) {
+    dbPlaces.forEach(place => {
+      const lat = parseFloat(place.latitude);
+      const lng = parseFloat(place.longitude);
 
-    const popupContent = `
-      <div class="card border-0 bg-white overflow-hidden w-100" style="border-radius: 16px;">
-        <img src="${spot.img}" class="card-img-top" style="height: 110px; object-fit: cover; width: 100%;" alt="${spot.title}">
-        <div class="card-body p-3 text-dark">
-          <h6 class="fw-bold mb-1 text-primary" style="font-size: 0.9rem;">${spot.title}</h6>
-          <p class="text-secondary mb-2" style="font-size: 0.75rem; line-height: 1.35;">${spot.desc}</p>
-          <button onclick="quickRoute('Jakarta', '${spot.title}')" class="btn btn-primary btn-sm w-100 rounded-pill py-1.5 fw-semibold" style="font-size:0.75rem;">
-            <i class="fa-solid fa-route me-1"></i> Rute ke Sini
-          </button>
-        </div>
-      </div>
-    `;
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const nameKey = place.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locationKey = place.location.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    const marker = L.marker([spot.lat, spot.lng], { icon: createIslandIcon(spot.title) })
-      .addTo(map)
-      .bindPopup(popupContent);
+        const safeImage = place.image_url && place.image_url.startsWith('http') 
+          ? place.image_url 
+          : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=400&q=80';
 
-    mapMarkers[key] = marker;
-  });
+        const popupContent = `
+          <div class="card border-0 bg-white overflow-hidden" style="width: 210px; border-radius: 12px;">
+            <img src="${safeImage}" class="card-img-top" style="height: 95px; object-fit: cover;" alt="${place.name}">
+            <div class="card-body p-2 text-dark">
+              <span class="badge bg-info text-dark mb-1">${place.category || 'Destinasi'}</span>
+              <h6 class="fw-bold mb-1 text-primary" style="font-size: 0.85rem;">${place.name}</h6>
+              <p class="text-secondary mb-1" style="font-size: 0.72rem;"><i class="fa-solid fa-location-dot me-1"></i>${place.location}</p>
+              <div class="fw-bold text-success small mb-2">Rp ${parseInt(place.price || 0).toLocaleString('id-ID')}</div>
+              <button onclick="quickRoute('Jakarta', '${place.name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-sm w-100 rounded-pill py-1" style="font-size:0.7rem;">
+                <i class="fa-solid fa-route me-1"></i> Rute ke Sini
+              </button>
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lng], { icon: createIslandIcon(place.name) })
+          .addTo(map)
+          .bindPopup(popupContent);
+
+        mapMarkers[place.place_id] = { marker, lat, lng, name: place.name };
+        placesMapKey[nameKey] = place.place_id;
+        placesMapKey[locationKey] = place.place_id;
+      }
+    });
+  }
 
   document.getElementById('originInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchAndDrawRoute();
@@ -127,18 +104,31 @@ window.addEventListener('load', () => {
 });
 
 function flyToLocation(locKey, btnElement = null) {
-  if (!locations[locKey] || !map) return;
+  if (!map) return;
 
-  const loc = locations[locKey];
-  map.flyTo([loc.lat, loc.lng], loc.zoom, {
-    animate: true,
-    duration: 1.5
-  });
+  if (locKey === 'indonesia') {
+    map.flyTo([-2.548926, 118.014863], 5, { animate: true, duration: 1.5 });
+  } else {
+    const cleanKey = locKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const placeId = placesMapKey[cleanKey];
 
-  if (mapMarkers[locKey]) {
-    setTimeout(() => {
-      mapMarkers[locKey].openPopup();
-    }, 1500);
+    if (placeId && mapMarkers[placeId]) {
+      const item = mapMarkers[placeId];
+      map.flyTo([item.lat, item.lng], 11, { animate: true, duration: 1.5 });
+      setTimeout(() => {
+        item.marker.openPopup();
+      }, 1500);
+    } else {
+      const foundEntry = Object.values(mapMarkers).find(m => 
+        m.name.toLowerCase().includes(locKey.toLowerCase())
+      );
+      if (foundEntry) {
+        map.flyTo([foundEntry.lat, foundEntry.lng], 11, { animate: true, duration: 1.5 });
+        setTimeout(() => {
+          foundEntry.marker.openPopup();
+        }, 1500);
+      }
+    }
   }
 
   if (btnElement) {
@@ -335,7 +325,6 @@ async function geocodeLocation(query) {
   return null;
 }
 
-// Render Info Rute Tanpa Bug Teks
 function displayRouteInfo(dist, time, steps) {
   const infoBox = document.getElementById('routeInfoBox');
   const distEl = document.getElementById('routeDist');

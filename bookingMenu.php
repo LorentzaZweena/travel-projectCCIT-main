@@ -88,10 +88,10 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             <a href="paymentMenu.php" class="nav-link-custom">
                 <i class="bi bi-credit-card-fill"></i> <span>Payment</span>
             </a>
-            <a href="booking.php" class="nav-link-custom active">
+            <a href="bookingMenu.php" class="nav-link-custom active">
                 <i class="bi bi-journal-bookmark-fill"></i> <span>Booking</span>
             </a>
-            <a href="reviews.php" class="nav-link-custom">
+            <a href="reviewsMenu.php" class="nav-link-custom">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
             </a>
         </nav>
@@ -268,7 +268,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
 
 </div>
 
-<!-- MODAL VIEW TICKET -->
 <?php 
 if ($res_bookings && $res_bookings->num_rows > 0):
     $res_bookings->data_seek(0);
@@ -279,7 +278,6 @@ if ($res_bookings && $res_bookings->num_rows > 0):
         $trans_id = $b['transaction_id'] ?? 0;
         $dest_place_id = $b['dest_place_id'] ?? 0;
 
-        // Query Passengers Pergi
         $q_pass_pergi = "
             SELECT pg.passenger_id, pg.name, pg.category, pg.ID, pg.birth_date, pp.seat_number,
                    inf.name AS infant_name
@@ -291,7 +289,6 @@ if ($res_bookings && $res_bookings->num_rows > 0):
         ";
         $res_pass_pergi = $conn->query($q_pass_pergi);
 
-        // Query Passengers Pulang
         $q_pass_pulang = "
             SELECT pg.passenger_id, pg.name, pp.seat_number
             FROM passengerpulang pp
@@ -306,7 +303,6 @@ if ($res_bookings && $res_bookings->num_rows > 0):
             }
         }
 
-        // Query Transaction Details
         $q_trans_det = "
             SELECT td.*, pg.name AS pass_name
             FROM transactiondetails td
@@ -315,7 +311,6 @@ if ($res_bookings && $res_bookings->num_rows > 0):
         ";
         $res_trans_det = $conn->query($q_trans_det);
 
-        // Query Reviews Destinasi
         $q_review = "SELECT * FROM reviews WHERE place_id = $dest_place_id ORDER BY review_id DESC LIMIT 1";
         $res_review = $conn->query($q_review);
         $review_data = $res_review ? $res_review->fetch_assoc() : null;

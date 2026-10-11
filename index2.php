@@ -68,7 +68,7 @@ $fallback_images = [
             <a href="paymentMenu.php" class="nav-link-custom">
                 <i class="bi bi-credit-card-fill"></i> <span>Payment</span>
             </a>
-            <a href="booking.php" class="nav-link-custom">
+            <a href="bookingMenu.php" class="nav-link-custom">
                 <i class="bi bi-journal-bookmark-fill"></i> <span>Booking</span>
             </a>
             <a href="reviews.php" class="nav-link-custom">

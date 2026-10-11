@@ -12,10 +12,7 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
-$query_total = "SELECT COUNT(*) AS total FROM payments p 
-                JOIN transactions t ON p.transaction_id = t.transaction_id
-                JOIN bookings b ON t.booking_id = b.booking_id
-                WHERE b.user_id = $user_id OR 1=1";
+$query_total = "SELECT COUNT(*) AS total FROM payments p JOIN transactions t ON p.transaction_id = t.transaction_id JOIN bookings b ON t.booking_id = b.booking_id WHERE b.user_id = $user_id";
 $res_total = $conn->query($query_total);
 $total_rows = $res_total ? (int)$res_total->fetch_assoc()['total'] : 0;
 $total_pages = ceil($total_rows / $limit);
@@ -29,7 +26,7 @@ $query_payments = "SELECT p.payment_id, p.payment_type, p.payment_date, p.status
                    JOIN bookings b ON t.booking_id = b.booking_id
                    LEFT JOIN tripdetailspergi tpergi ON b.booking_id = tpergi.booking_id
                    LEFT JOIN places pl ON tpergi.destination_id = pl.place_id
-                   WHERE b.user_id = $user_id OR 1=1
+                   WHERE b.user_id = $user_id
                    ORDER BY p.payment_id DESC
                    LIMIT $limit OFFSET $offset";
 $res_payments = $conn->query($query_payments);
@@ -41,7 +38,7 @@ $query_stats = "SELECT
                 FROM payments p
                 JOIN transactions t ON p.transaction_id = t.transaction_id
                 JOIN bookings b ON t.booking_id = b.booking_id
-                WHERE b.user_id = $user_id OR 1=1";
+                WHERE b.user_id = $user_id";
 $res_stats = $conn->query($query_stats);
 $stats = $res_stats ? $res_stats->fetch_assoc() : [];
 
@@ -49,7 +46,12 @@ $total_spent = (float)($stats['total_spent'] ?? 0);
 $total_success = (int)($stats['total_success'] ?? 0);
 $total_pending = (int)($stats['total_pending'] ?? 0);
 
-$query_card = "SELECT * FROM cards ORDER BY card_id ASC LIMIT 1";
+$query_card = "SELECT c.* FROM cards c 
+               JOIN payments pm ON c.payment_id = pm.payment_id
+               JOIN transactions t ON pm.transaction_id = t.transaction_id
+               JOIN bookings b ON t.booking_id = b.booking_id
+               WHERE b.user_id = $user_id 
+               ORDER BY c.card_id ASC LIMIT 1";
 $res_card = $conn->query($query_card);
 $user_card = $res_card ? $res_card->fetch_assoc() : null;
 
@@ -85,7 +87,7 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             <a href="paymentMenu.php" class="nav-link-custom active">
                 <i class="bi bi-credit-card-fill"></i> <span>Payment</span>
             </a>
-            <a href="booking.php" class="nav-link-custom">
+            <a href="bookingMenu.php" class="nav-link-custom">
                 <i class="bi bi-journal-bookmark-fill"></i> <span>Booking</span>
             </a>
             <a href="reviews.php" class="nav-link-custom">
@@ -184,7 +186,7 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat pembayaran.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat pembayaran untuk akun Anda.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

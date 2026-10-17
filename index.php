@@ -17,6 +17,20 @@
             $places_data[] = $row;
         }
     }
+
+    function getValidImageUrl($url, $index = 0) {
+        if (empty($url) || str_contains($url, 'example.com') || !str_starts_with($url, 'http')) {
+            $fallbackImages = [
+                'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'
+            ];
+            return $fallbackImages[$index % count($fallbackImages)];
+        }
+        return $url;
+    }
 ?>
 
 <!DOCTYPE html>
@@ -33,6 +47,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="css/index-style.css">
 </head>
 <body>
@@ -73,6 +89,8 @@
                     <i class="fa-solid fa-user me-1"></i> <?= htmlspecialchars($_SESSION['name']); ?>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                    <li><a class="dropdown-item text-primary small" href="index2.php"><i class="fa fa-door-open me-2"></i>Dashboard</a></li>
+                    <i class="bi bi-door-open"></i>
                     <li><a class="dropdown-item text-danger small" href="logout.php"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
                 </ul>
                 </div>
@@ -190,11 +208,10 @@
       </div>
       <h2 class="display-5 fw-bold text-white mb-2">Interactive Map of Indonesia</h2>
       <p class="text-light opacity-75 max-w-600 mx-auto fs-6">
-        Explore the beauty of Indonesia’s best islands interactively. Click the filter button or location marker to see an overview of the destination.
+        Explore the beauty of Indonesia's best islands interactively. Click the filter button or location marker to see an overview of the destination.
       </p>
     </div>
 
-    <!-- Filter Pulau/Kota (100% DINAMIS DARI DATABASE MYSQL) -->
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-4" id="mapFilters">
       <button class="map-filter-btn active" onclick="flyToLocation('indonesia', this)">
         <i class="fa-solid fa-globe me-1"></i> Semua Lokasi
@@ -207,18 +224,15 @@
     </div>
 
     <div class="row g-4 align-items-stretch">
-      <!-- Kolom Map -->
       <div class="col-lg-8">
         <div class="geomap-container h-100" style="min-height: 680px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
           <div id="map" style="height: 100%; min-height: 680px; width: 100%;"></div>
         </div>
       </div>
 
-      <!-- Kolom Panel Rute & Top Destinations -->
       <div class="col-lg-4">
         <div class="h-100 d-flex flex-column justify-content-between p-3 rounded-4" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08);">
           
-          <!-- Form Pencarian Rute -->
           <div class="p-3 rounded-3 mb-3" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255,255,255,0.1);">
             <div class="fw-bold text-white small mb-2"><i class="fa-solid fa-route text-info me-2"></i>Cari Rute Perjalanan</div>
             
@@ -229,7 +243,6 @@
               <input type="text" id="destInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Destinasi (cth: Bandung)" value="<?= !empty($places_data[0]['name']) ? htmlspecialchars($places_data[0]['name']) : 'Surabaya'; ?>">
             </div>
 
-            <!-- Pilihan Moda Transportasi -->
             <div class="d-flex justify-content-between gap-1 mb-2">
               <button type="button" class="btn btn-sm btn-outline-info flex-fill mode-btn active" onclick="selectTransportMode('driving', this)">
                 <i class="fa-solid fa-car"></i><br><span style="font-size:0.65rem;">Mobil</span>
@@ -249,7 +262,6 @@
               <i class="fa-solid fa-magnifying-glass-location me-1"></i> Temukan Rute Jalan
             </button>
 
-            <!-- Box Petunjuk Jalan -->
             <div id="routeInfoBox" class="mt-2 p-2 rounded bg-dark text-light small d-none">
               <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-1 mb-2">
                 <span id="routeDist" class="fw-bold text-info fs-6">0 km</span>
@@ -260,7 +272,6 @@
             </div>
           </div>
 
-          <!-- Top Destinations (100% DINAMIS DARI DATABASE MYSQL) -->
           <div>
             <div class="d-flex align-items-center justify-content-between mb-2 px-1">
               <span class="fw-bold text-white small"><i class="fa-solid fa-fire text-warning me-2"></i>Top Destinations</span>
@@ -271,13 +282,11 @@
               <?php 
                 $top_spots = array_slice($places_data, 0, 4);
                 if (!empty($top_spots)):
-                  foreach ($top_spots as $spot): 
-                    $img = (!empty($spot['image_url']) && str_starts_with($spot['image_url'], 'http')) 
-                      ? $spot['image_url'] 
-                      : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=150&q=80';
+                  foreach ($top_spots as $idx => $spot): 
+                    $img = getValidImageUrl($spot['image_url'], $idx);
               ?>
                 <div class="dest-list-item" onclick="quickRoute('Jakarta', '<?= addslashes(htmlspecialchars($spot['name'])); ?>')">
-                  <img src="<?= htmlspecialchars($img); ?>" class="dest-list-img" alt="<?= htmlspecialchars($spot['name']); ?>">
+                  <img src="<?= htmlspecialchars($img); ?>" class="dest-list-img" alt="<?= htmlspecialchars($spot['name']); ?>" onerror="this.src='https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=150&q=80'">
                   <div class="flex-grow-1">
                     <div class="fw-bold text-white small mb-1"><?= htmlspecialchars($spot['name']); ?></div>
                     <div class="text-white" style="font-size:0.75rem;"><i class="fa-solid fa-star text-warning me-1"></i>4.9 • <?= htmlspecialchars($spot['category'] ?? 'Wisata'); ?></div>
@@ -291,9 +300,11 @@
             </div>
           </div>
 
-          <button class="btn btn-primary w-100 rounded-pill mt-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#planModal">
-            <i class="fa-solid fa-paper-plane me-1"></i> Plan Tour to Marker
-          </button>
+          <a href="index2.php">
+            <button class="btn btn-primary w-100 rounded-pill mt-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#planModal">
+              <i class="fa-solid fa-paper-plane me-1"></i> Plan Tour to Marker
+            </button>
+          </a>
         </div>
       </div>
     </div>
@@ -311,24 +322,22 @@
           Explore Indonesian <span>Islands</span>
         </h2>
       </div>
-      <button class="btn btn-outline-primary rounded-pill px-4 py-2 mt-3 mt-md-0 fw-semibold">
+      <!-- <button class="btn btn-outline-primary rounded-pill px-4 py-2 mt-3 mt-md-0 fw-semibold">
         View All Destinations <i class="fa-solid fa-arrow-right ms-1"></i>
-      </button>
+      </button> -->
     </div>
 
     <div class="row g-4">
       <?php if ($result && $result->num_rows > 0): ?>
-        <?php while ($row = $result->fetch_assoc()): ?>
+        <?php $idx = 0; while ($row = $result->fetch_assoc()): ?>
           <?php 
             $locationKey = htmlspecialchars($row['name']);
-            $imageSrc = (!empty($row['image_url']) && str_starts_with($row['image_url'], 'http')) 
-              ? htmlspecialchars($row['image_url']) 
-              : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80';
+            $imageSrc = getValidImageUrl($row['image_url'], $idx++);
           ?>
           <div class="col-md-6 col-lg-4">
             <div class="dest-card">
               <div class="dest-img-wrap">
-                <img src="<?= $imageSrc; ?>" alt="<?= htmlspecialchars($row['name']); ?>">
+                <img src="<?= $imageSrc; ?>" alt="<?= htmlspecialchars($row['name']); ?>" onerror="this.src='https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80'">
               </div>
               <div class="dest-body">
                 <div>
@@ -337,9 +346,9 @@
                   </div>
                   <div class="dest-sub"><?= htmlspecialchars($row['description']); ?></div>
                 </div>
-                <div class="btn-arrow" onclick="flyToLocation('<?= addslashes($locationKey); ?>')">
+                <a href="booking.php?place_id=<?= $row['place_id']; ?>" class="btn-arrow text-decoration-none">
                   <i class="fa-solid fa-arrow-right"></i>
-                </div>
+                </a>
               </div>
             </div>
           </div>
@@ -463,7 +472,6 @@
           </ul>
         </div>
 
-        <!-- DINAMIS DARI DATABASE -->
         <div class="col-lg-3 col-md-6 mb-4 mb-lg-0 ps-lg-4">
           <h5 class="footer-heading">Top Destinations</h5>
           <ul class="footer-links">
@@ -581,6 +589,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
   <script>
     const dbPlaces = <?= json_encode($places_data); ?>;
   </script>

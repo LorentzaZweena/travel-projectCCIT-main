@@ -6,6 +6,21 @@ let selectedMode = 'driving';
 let mapMarkers = {};
 let placesMapKey = {};
 
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=500&q=80',
+  'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=500&q=80',
+  'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=500&q=80',
+  'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=500&q=80',
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80'
+];
+
+function getValidImg(url, idx = 0) {
+  if (!url || url.includes('example.com') || !url.startsWith('http')) {
+    return fallbackImages[idx % fallbackImages.length];
+  }
+  return url;
+}
+
 function createIslandIcon(title) {
   return L.divIcon({
     className: 'custom-island-marker',
@@ -57,27 +72,30 @@ window.addEventListener('load', () => {
   }).addTo(map);
 
   if (typeof dbPlaces !== 'undefined' && dbPlaces.length > 0) {
-    dbPlaces.forEach(place => {
+    dbPlaces.forEach((place, index) => {
       const lat = parseFloat(place.latitude);
       const lng = parseFloat(place.longitude);
 
       if (!isNaN(lat) && !isNaN(lng)) {
         const nameKey = place.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const locationKey = place.location.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locationKey = place.location ? place.location.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
-        const safeImage = place.image_url && place.image_url.startsWith('http') 
-          ? place.image_url 
-          : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=400&q=80';
+        const safeImage = getValidImg(place.image_url, index);
 
         const popupContent = `
-          <div class="card border-0 bg-white overflow-hidden" style="width: 210px; border-radius: 12px;">
-            <img src="${safeImage}" class="card-img-top" style="height: 95px; object-fit: cover;" alt="${place.name}">
-            <div class="card-body p-2 text-dark">
-              <span class="badge bg-info text-dark mb-1">${place.category || 'Destinasi'}</span>
-              <h6 class="fw-bold mb-1 text-primary" style="font-size: 0.85rem;">${place.name}</h6>
-              <p class="text-secondary mb-1" style="font-size: 0.72rem;"><i class="fa-solid fa-location-dot me-1"></i>${place.location}</p>
-              <div class="fw-bold text-success small mb-2">Rp ${parseInt(place.price || 0).toLocaleString('id-ID')}</div>
-              <button onclick="quickRoute('Jakarta', '${place.name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-sm w-100 rounded-pill py-1" style="font-size:0.7rem;">
+          <div class="card border-0 bg-white" style="width: 220px;">
+            <div class="position-relative">
+              <img src="${safeImage}" class="w-100" style="height: 110px; object-fit: cover; border-top-left-radius: 16px; border-top-right-radius: 16px;" alt="${place.name}" onerror="this.src='https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=500&q=80'">
+              <span class="badge bg-info text-dark position-absolute bottom-0 start-0 m-2 shadow-sm" style="font-size:0.65rem;">${place.category || 'Destinasi'}</span>
+            </div>
+            <div class="card-body p-2.5 text-dark">
+              <h6 class="fw-bold mb-1 text-dark text-truncate" title="${place.name}" style="font-size: 0.88rem;">${place.name}</h6>
+              <p class="text-muted mb-1" style="font-size: 0.72rem;"><i class="fa-solid fa-location-dot me-1 text-danger"></i>${place.location || 'Indonesia'}</p>
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small" style="font-size: 0.7rem;">Mulai dari</span>
+                <span class="fw-bold text-success small">Rp ${parseInt(place.price || 0).toLocaleString('id-ID')}</span>
+              </div>
+              <button onclick="quickRoute('Jakarta', '${place.name.replace(/'/g, "\\'")}')" class="btn btn-primary btn-sm w-100 rounded-pill py-1.5 fw-semibold" style="font-size:0.72rem;">
                 <i class="fa-solid fa-route me-1"></i> Rute ke Sini
               </button>
             </div>
@@ -88,9 +106,9 @@ window.addEventListener('load', () => {
           .addTo(map)
           .bindPopup(popupContent);
 
-        mapMarkers[place.place_id] = { marker, lat, lng, name: place.name };
+        mapMarkers[place.place_id] = { marker, lat, lng, name: place.name, location: place.location };
         placesMapKey[nameKey] = place.place_id;
-        placesMapKey[locationKey] = place.place_id;
+        if (locationKey) placesMapKey[locationKey] = place.place_id;
       }
     });
   }
@@ -110,7 +128,15 @@ function flyToLocation(locKey, btnElement = null) {
     map.flyTo([-2.548926, 118.014863], 5, { animate: true, duration: 1.5 });
   } else {
     const cleanKey = locKey.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const placeId = placesMapKey[cleanKey];
+    let placeId = placesMapKey[cleanKey];
+
+    if (!placeId) {
+      const foundEntry = Object.values(mapMarkers).find(m => 
+        m.name.toLowerCase().includes(locKey.toLowerCase()) || 
+        (m.location && m.location.toLowerCase().includes(locKey.toLowerCase()))
+      );
+      if (foundEntry) placeId = Object.keys(mapMarkers).find(key => mapMarkers[key] === foundEntry);
+    }
 
     if (placeId && mapMarkers[placeId]) {
       const item = mapMarkers[placeId];
@@ -118,16 +144,6 @@ function flyToLocation(locKey, btnElement = null) {
       setTimeout(() => {
         item.marker.openPopup();
       }, 1500);
-    } else {
-      const foundEntry = Object.values(mapMarkers).find(m => 
-        m.name.toLowerCase().includes(locKey.toLowerCase())
-      );
-      if (foundEntry) {
-        map.flyTo([foundEntry.lat, foundEntry.lng], 11, { animate: true, duration: 1.5 });
-        setTimeout(() => {
-          foundEntry.marker.openPopup();
-        }, 1500);
-      }
     }
   }
 
@@ -155,12 +171,53 @@ function quickRoute(asal, tujuan) {
   searchAndDrawRoute();
 }
 
+async function geocodeLocation(query) {
+  const cleanQuery = query.toLowerCase().trim();
+
+  if (typeof dbPlaces !== 'undefined') {
+    const match = dbPlaces.find(p => 
+      p.name.toLowerCase().trim() === cleanQuery || 
+      p.name.toLowerCase().includes(cleanQuery) ||
+      (p.location && p.location.toLowerCase().trim() === cleanQuery)
+    );
+    if (match && match.latitude && match.longitude) {
+      return {
+        lat: parseFloat(match.latitude),
+        lon: parseFloat(match.longitude),
+        display_name: match.name
+      };
+    }
+  }
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        display_name: data[0].display_name
+      };
+    }
+  } catch (e) {
+    console.error("Geocoding Error:", e);
+  }
+
+  return null;
+}
+
 async function searchAndDrawRoute() {
   const originQuery = document.getElementById('originInput').value.trim();
   const destQuery = document.getElementById('destInput').value.trim();
 
   if (!originQuery || !destQuery) {
-    alert("Silakan isi lokasi asal dan destinasi terlebih dahulu!");
+    Swal.fire({
+      icon: 'warning',
+      title: 'Form Belum Lengkap',
+      text: 'Silakan isi lokasi asal dan destinasi terlebih dahulu!',
+      confirmColor: '#0d6efd'
+    });
     return;
   }
 
@@ -169,7 +226,12 @@ async function searchAndDrawRoute() {
     const destCoords = await geocodeLocation(destQuery);
 
     if (!originCoords || !destCoords) {
-      alert("Lokasi tidak ditemukan. Coba ketik nama kota/tempat yang lebih spesifik.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Lokasi Tidak Ditemukan',
+        text: 'Lokasi tidak ditemukan. Coba ketik nama kota (misal: Jakarta, Surabaya, Bandung) atau pilih dari daftar destinasi.',
+        confirmColor: '#0d6efd'
+      });
       return;
     }
 
@@ -190,7 +252,12 @@ async function searchAndDrawRoute() {
 
     if (selectedMode === 'plane') {
       if (straightDistKm < 100) {
-        alert("Mode pesawat tidak tersedia untuk rute jarak dekat (<100 km). Silakan gunakan Mobil, Motor, atau Jalan Kaki!");
+        Swal.fire({
+          icon: 'info',
+          title: 'Mode Pesawat Tidak Tersedia',
+          text: 'Rute jarak dekat (<100 km) tidak tersedia penerbangan. Silakan pilih Mobil, Motor, atau Jalan Kaki.',
+          confirmColor: '#0d6efd'
+        });
         displayRouteInfo(`${straightDistKm} km`, "Tidak Tersedia", [
           { text: "Rute terlalu dekat untuk penerbangan. Silakan pilih Mobil, Motor, atau Jalan Kaki.", dist: "", icon: "fa-triangle-exclamation text-warning" }
         ]);
@@ -253,12 +320,22 @@ async function searchAndDrawRoute() {
 
         displayRouteInfo(`${distanceKm} km`, `${durationMin} menit`, formattedSteps);
       } else {
-        alert("Rute jalan tidak ditemukan untuk lokasi ini.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Rute Tidak Ditemukan',
+          text: 'Rute jalan darat tidak ditemukan untuk menghubungkan kedua lokasi ini (misal terpisah lautan). Coba ubah moda ke Pesawat!',
+          confirmColor: '#0d6efd'
+        });
       }
     }
   } catch (err) {
     console.error(err);
-    alert("Gagal mengambil data rute jalan.");
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal',
+      text: 'Gagal mengambil data rute perjalanan.',
+      confirmColor: '#0d6efd'
+    });
   }
 }
 
@@ -309,20 +386,6 @@ function parseGoogleMapsInstruction(step) {
   }
 
   return { text, dist: distText, icon };
-}
-
-async function geocodeLocation(query) {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data && data.length > 0) {
-    return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon),
-      display_name: data[0].display_name
-    };
-  }
-  return null;
 }
 
 function displayRouteInfo(dist, time, steps) {

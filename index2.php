@@ -1,11 +1,18 @@
 <?php
 session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+
 require_once 'koneksi.php';
 
-$user_id = $_SESSION['user_id'] ?? 1;
+$user_id = (int)$_SESSION['user_id'];
+
 $query_user = "SELECT * FROM users WHERE user_id = $user_id LIMIT 1";
 $res_user = $conn->query($query_user);
-$user = $res_user ? $res_user->fetch_assoc() : ['name' => 'Budi Santoso', 'email' => 'budi@example.com'];
+$user = ($res_user && $res_user->num_rows > 0) ? $res_user->fetch_assoc() : ['name' => 'User', 'email' => ''];
 
 $query_places = "SELECT * FROM places ORDER BY place_id ASC LIMIT 3";
 $res_places = $conn->query($query_places);
@@ -15,7 +22,7 @@ $query_bookings = "SELECT b.booking_id, b.booking_date, b.trip_type, b.status,
                    FROM bookings b
                    LEFT JOIN tripdetailspergi t ON b.booking_id = t.booking_id
                    LEFT JOIN places p ON t.destination_id = p.place_id
-                   WHERE b.user_id = $user_id OR 1=1
+                   WHERE b.user_id = $user_id
                    ORDER BY b.booking_id DESC LIMIT 4";
 $res_bookings = $conn->query($query_bookings);
 
@@ -26,7 +33,8 @@ $query_reviews = "SELECT r.*, u.name AS user_name, p.name AS place_name, p.locat
                   ORDER BY r.review_date DESC LIMIT 3";
 $res_reviews = $conn->query($query_reviews);
 
-$query_card = "SELECT * FROM cards ORDER BY card_id ASC LIMIT 1";
+$query_card = "SELECT c.* FROM cards c JOIN payments p ON c.payment_id = p.payment_id JOIN transactions t ON p.transaction_id = t.transaction_id JOIN bookings b ON t.booking_id = b.booking_id WHERE b.user_id = $user_id 
+               LIMIT 1";
 $res_card = $conn->query($query_card);
 $user_card = $res_card ? $res_card->fetch_assoc() : null;
 
@@ -73,6 +81,9 @@ $fallback_images = [
             </a>
             <a href="reviewsMenu.php" class="nav-link-custom">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
+            </a>
+            <a href="index.php" class="nav-link-custom">
+                <i class="bi bi-arrow-left"></i> <span>Back to home</span>  
             </a>
         </nav>
 
@@ -135,36 +146,169 @@ $fallback_images = [
                             <tr>
                                 <th>Destinasi</th>
                                 <th>Tipe Trip</th>
-                                <th>Tanggal</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if ($res_bookings && $res_bookings->num_rows > 0): ?>
                                 <?php while ($b = $res_bookings->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="fw-semibold text-dark">
-                                            <div class="text-truncate" style="max-width: 140px;"><?= htmlspecialchars($b['place_name'] ?? 'Wisata Indonesia'); ?></div>
-                                            <small class="text-muted fw-normal"><?= htmlspecialchars($b['location'] ?? 'Indonesia'); ?></small>
-                                        </td>
-                                        <td><span class="badge bg-primary-subtle text-primary"><?= htmlspecialchars($b['trip_type']); ?></span></td>
-                                        <td class="text-muted"><?= htmlspecialchars($b['booking_date']); ?></td>
-                                        <td>
-                                            <?php 
-                                            $status = $b['status'];
-                                            $badge_class = 'bg-warning text-dark';
-                                            if ($status == 'Completed' || $status == 'Confirmed') $badge_class = 'bg-success text-white';
-                                            if ($status == 'Cancelled') $badge_class = 'bg-danger text-white';
-                                            ?>
-                                            <span class="badge rounded-pill <?= $badge_class; ?>"><?= htmlspecialchars($status); ?></span>
-                                        </td>
-                                    </tr>
+                                    
+<tr>
+    <td class="fw-semibold text-dark">
+        <div class="text-truncate" style="max-width: 140px;">
+            <?= htmlspecialchars($b['place_name'] ?? 'Wisata Indonesia'); ?>
+        </div>
+        <small class="text-muted fw-normal">
+            <?= htmlspecialchars($b['location'] ?? 'Indonesia'); ?>
+        </small>
+    </td>
+
+    <td>
+        <span class="badge bg-primary-subtle text-primary">
+            <?= htmlspecialchars($b['trip_type']); ?>
+        </span>
+    </td>
+
+    <td>
+        <?php
+        $status = $b['status'];
+        $badge_class = 'bg-warning text-dark';
+
+        if ($status === 'Completed' || $status === 'Confirmed') {
+            $badge_class = 'bg-success text-white';
+        } elseif ($status === 'Cancelled') {
+            $badge_class = 'bg-danger text-white';
+        }
+        ?>
+        <span class="badge rounded-pill <?= $badge_class; ?>">
+            <?= htmlspecialchars($status); ?>
+        </span>
+    </td>
+
+    <td>
+        <button
+            type="button"
+            class="btn btn-sm btn-primary rounded-pill px-3"
+            data-bs-toggle="modal"
+            data-bs-target="#ticketModal<?= (int)$b['booking_id']; ?>">
+            <i class="bi bi-ticket-perforated me-1"></i>
+            View Ticket
+        </button>
+    </td>
+</tr>
+
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr><td colspan="4" class="text-center text-muted">Belum ada data booking.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
+                    
+<?php
+if ($res_bookings && $res_bookings->num_rows > 0):
+    $res_bookings->data_seek(0);
+
+    while ($ticket = $res_bookings->fetch_assoc()):
+        $ticket_status = $ticket['status'] ?? 'Pending';
+?>
+    <div class="modal fade"
+         id="ticketModal<?= (int)$ticket['booking_id']; ?>"
+         tabindex="-1"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-ticket-perforated me-2"></i>
+                        Booking Ticket
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-bus-front-fill text-primary"
+                           style="font-size: 45px;"></i>
+                        <h5 class="fw-bold mt-2">
+                            <?= htmlspecialchars($ticket['place_name'] ?? 'Wisata Indonesia'); ?>
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <?= htmlspecialchars($ticket['location'] ?? 'Indonesia'); ?>
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Booking ID</span>
+                        <strong>
+                            #BK-<?= str_pad(
+                                (int)$ticket['booking_id'],
+                                4,
+                                '0',
+                                STR_PAD_LEFT
+                            ); ?>
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Trip Type</span>
+                        <strong>
+                            <?= htmlspecialchars($ticket['trip_type'] ?? '-'); ?>
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Booking Status</span>
+                        <span class="badge rounded-pill
+                            <?= $ticket_status === 'Cancelled'
+                                ? 'bg-danger'
+                                : (in_array($ticket_status, ['Confirmed', 'Completed'], true)
+                                    ? 'bg-success'
+                                    : 'bg-warning text-dark'); ?>">
+                            <?= htmlspecialchars($ticket_status); ?>
+                        </span>
+                    </div>
+
+                    <?php if ($ticket_status === 'Confirmed' ||
+                              $ticket_status === 'Completed'): ?>
+                        <div class="alert alert-success mt-4 mb-0">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            Your booking is confirmed.
+                        </div>
+                    <?php elseif ($ticket_status === 'Cancelled'): ?>
+                        <div class="alert alert-danger mt-4 mb-0">
+                            This booking has been cancelled.
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-warning mt-4 mb-0">
+                            Your booking is waiting for confirmation.
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+<?php
+    endwhile;
+endif;
+?>
+
                 </div>
             </div>
 

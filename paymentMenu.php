@@ -2,49 +2,49 @@
 session_start();
 require_once 'koneksi.php';
 
-$user_id = $_SESSION['user_id'] ?? 1;
+function h($value) {
+    return htmlspecialchars((string)($value ?? ""), ENT_QUOTES, "UTF-8");
+}
+
+function rupiah($angka) {
+    return 'Rp ' . number_format((float)($angka ?? 0), 0, ',', '.');
+}
+
+function tanggal($date) {
+    if (!$date) return '-';
+    return date('d M Y, H:i', strtotime($date));
+}
+
+function paymentDisplayStatus($paymentStatus, $transactionStatus) {
+    $p = strtolower(trim((string)$paymentStatus));
+    $t = strtolower(trim((string)$transactionStatus));
+
+    if (
+        in_array($t, ["paid", "success", "completed"], true) ||
+        in_array($p, ["success", "paid", "completed"], true)
+    ) {
+        return "Success";
+    }
+
+    if (
+        in_array($t, ["cancelled", "canceled"], true) ||
+        in_array($p, ["cancelled", "canceled"], true)
+    ) {
+        return "Cancelled";
+    }
+
+    if ($p === "failed" || $t === "failed") {
+        return "Failed";
+    }
+
+    return "Pending";
+}
+
+$user_id = (int)($_SESSION['user_id'] ?? 1);
+
 $query_user = "SELECT * FROM users WHERE user_id = $user_id LIMIT 1";
 $res_user = $conn->query($query_user);
 $user = $res_user ? $res_user->fetch_assoc() : ['name' => 'Budi Santoso', 'email' => 'budi@example.com'];
-
-$limit = 10;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($page < 1) $page = 1;
-$offset = ($page - 1) * $limit;
-
-$query_total = "SELECT COUNT(*) AS total FROM payments p JOIN transactions t ON p.transaction_id = t.transaction_id JOIN bookings b ON t.booking_id = b.booking_id WHERE b.user_id = $user_id";
-$res_total = $conn->query($query_total);
-$total_rows = $res_total ? (int)$res_total->fetch_assoc()['total'] : 0;
-$total_pages = ceil($total_rows / $limit);
-
-$query_payments = "SELECT p.payment_id, p.payment_type, p.payment_date, p.status AS payment_status,
-                          t.transaction_id, t.total_amount,
-                          b.booking_id, b.trip_type,
-                          pl.name AS place_name, pl.location
-                   FROM payments p
-                   JOIN transactions t ON p.transaction_id = t.transaction_id
-                   JOIN bookings b ON t.booking_id = b.booking_id
-                   LEFT JOIN tripdetailspergi tpergi ON b.booking_id = tpergi.booking_id
-                   LEFT JOIN places pl ON tpergi.destination_id = pl.place_id
-                   WHERE b.user_id = $user_id
-                   ORDER BY p.payment_id DESC
-                   LIMIT $limit OFFSET $offset";
-$res_payments = $conn->query($query_payments);
-
-$query_stats = "SELECT 
-                    SUM(CASE WHEN p.status = 'Success' THEN CAST(t.total_amount AS UNSIGNED) ELSE 0 END) AS total_spent,
-                    COUNT(CASE WHEN p.status = 'Success' THEN 1 END) AS total_success,
-                    COUNT(CASE WHEN p.status = 'Pending' THEN 1 END) AS total_pending
-                FROM payments p
-                JOIN transactions t ON p.transaction_id = t.transaction_id
-                JOIN bookings b ON t.booking_id = b.booking_id
-                WHERE b.user_id = $user_id";
-$res_stats = $conn->query($query_stats);
-$stats = $res_stats ? $res_stats->fetch_assoc() : [];
-
-$total_spent = (float)($stats['total_spent'] ?? 0);
-$total_success = (int)($stats['total_success'] ?? 0);
-$total_pending = (int)($stats['total_pending'] ?? 0);
 
 $query_card = "SELECT c.* FROM cards c 
                JOIN payments pm ON c.payment_id = pm.payment_id
@@ -57,6 +57,50 @@ $user_card = $res_card ? $res_card->fetch_assoc() : null;
 
 $raw_card_number = $user_card['card_number'] ?? '4532750012340001';
 $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
+
+$limit = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+$count_sql = "SELECT COUNT(*) AS total 
+              FROM payments p 
+              JOIN transactions t ON p.transaction_id = t.transaction_id 
+              JOIN bookings b ON t.booking_id = b.booking_id 
+              WHERE b.user_id = ?";
+$stmt_count = $conn->prepare($count_sql);
+$stmt_count->bind_param("i", $user_id);
+$stmt_count->execute();
+$count_res = $stmt_count->get_result();
+$total_rows = $count_res ? (int)$count_res->fetch_assoc()['total'] : 0;
+$total_pages = ceil($total_rows / $limit);
+
+$sql = "
+    SELECT
+        p.payment_id,
+        p.transaction_id,
+        p.payment_type,
+        p.payment_date,
+        p.status AS payment_status,
+        t.booking_id,
+        t.total_amount,
+        t.payment_status AS transaction_status
+    FROM payments p
+    JOIN transactions t ON p.transaction_id = t.transaction_id
+    JOIN bookings b ON t.booking_id = b.booking_id
+    WHERE b.user_id = ?
+    ORDER BY p.payment_id DESC
+    LIMIT ? OFFSET ?
+";
+
+$stmt_data = $conn->prepare($sql);
+$stmt_data->bind_param("iii", $user_id, $limit, $offset);
+$stmt_data->execute();
+$result = $stmt_data->get_result();
+
+if (!$result) {
+    die("Unable to load payments. Please check your database columns.");
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,12 +108,82 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment - Travel</title>
+    <title>Payment History - Travel</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/index2-style.css">
+
+    <style>
+        .eyebrow {
+            color: #1685f8;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 8px 30px rgba(30,65,100,.04);
+        }
+
+        .count {
+            background: #edf5ff;
+            color: #1685f8;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-success { color: #119c70; background: #e5f8ef; }
+        .status-pending { color: #b77912; background: #fff4d8; }
+        .status-failed { color: #c62828; background: #ffebeb; }
+        .status-cancelled { color: #c62828; background: #ffebeb; }
+
+        .btn-edit {
+            background: #eaf3ff;
+            color: #1685f8;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .btn-edit:hover { background: #d0e4ff; color: #1066c6; }
+
+        .btn-cancel {
+            background: #fff0f0;
+            color: #d14343;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .btn-cancel:hover { background: #ffdada; color: #a82e2e; }
+
+        .btn-disabled {
+            background: #f0f2f5;
+            color: #8994a3;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
 
@@ -93,6 +207,9 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             <a href="reviewsMenu.php" class="nav-link-custom">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
             </a>
+            <a href="index.php" class="nav-link-custom">
+                <i class="bi bi-arrow-left"></i> <span>Back to home</span>  
+            </a>
         </nav>
 
         <a href="logout.php" class="btn-logout mt-0 mt-lg-auto">
@@ -101,123 +218,117 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
     </aside>
 
     <main class="main-wrapper">
-        <header class="top-header">
+        <header class="top-header mb-4">
             <div>
-                <h1 class="welcome-title">Payment history</h1>
-                <p class="welcome-sub mb-0">Kelola dan pantau seluruh transaksi pembayaran wisata Anda</p>
+                <div class="eyebrow mb-1">YOUR ACCOUNT</div>
+                <h1 class="welcome-title fs-2 fw-bold mb-1">Payment History</h1>
+                <p class="welcome-sub text-muted mb-0">View and manage your travel booking payments.</p>
             </div>
         </header>
 
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-4">
-                <div class="p-3 bg-light rounded-4 shadow-sm border-0">
-                    <div class="text-muted extra-small fw-semibold mb-1">Total pengeluaran</div>
-                    <div class="fw-bold fs-5 text-primary">Rp <?= number_format($total_spent, 0, ',', '.'); ?></div>
+        <div class="payment-card border mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h2 class="fs-5 fw-bold mb-0">Payment Transactions</h2>
+                <div class="count">
+                    <?= $total_rows ?> Payments
                 </div>
-            </div>
-            <div class="col-12 col-sm-4">
-                <div class="p-3 bg-light rounded-4 shadow-sm border-0">
-                    <div class="text-muted extra-small fw-semibold mb-1">Transaksi berhasil</div>
-                    <div class="fw-bold fs-5 text-success"><?= $total_success; ?> Transaksi</div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-4">
-                <div class="p-3 bg-light rounded-4 shadow-sm border-0">
-                    <div class="text-muted extra-small fw-semibold mb-1">Pending</div>
-                    <div class="fw-bold fs-5 text-warning"><?= $total_pending; ?> Transaksi</div>
-                </div>
-            </div>
-        </div>
-
-        <section>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0">Daftar Transaksi Saya</h6>
-                <span class="badge bg-primary-subtle text-primary fw-semibold"><?= $total_rows; ?> Total Data</span>
             </div>
 
-            <div class="table-responsive rounded-4 shadow-sm bg-white border">
-                <table class="table table-hover table-custom align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID Pay</th>
-                            <th>Destinasi</th>
-                            <th>Metode Bayar</th>
-                            <th>Tanggal Pembayaran</th>
-                            <th>Total Tagihan</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($res_payments && $res_payments->num_rows > 0): ?>
-                            <?php while ($pay = $res_payments->fetch_assoc()): ?>
+            <?php if ($result->num_rows > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="min-width: 850px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Booking</th>
+                                <th>Transaction</th>
+                                <th>Payment Method</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Payment Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                                <?php
+                                $paymentStatus = strtolower(trim((string)($row["payment_status"] ?? "")));
+                                $transactionStatus = strtolower(trim((string)($row["transaction_status"] ?? "")));
+
+                                $status = paymentDisplayStatus($paymentStatus, $transactionStatus);
+
+                                $canManage = in_array($paymentStatus, ["pending", "failed"], true) 
+                                             && $transactionStatus === "pending";
+
+                                $statusClass = strtolower($status);
+                                ?>
+
                                 <tr>
-                                    <td class="fw-bold text-secondary">#PAY-<?= str_pad($pay['payment_id'], 4, '0', STR_PAD_LEFT); ?></td>
-                                    <td class="fw-semibold text-dark">
-                                        <div class="text-truncate" style="max-width: 180px;"><?= htmlspecialchars($pay['place_name'] ?? 'Wisata Indonesia'); ?></div>
-                                        <small class="text-muted fw-normal"><?= htmlspecialchars($pay['location'] ?? 'Indonesia'); ?></small>
-                                    </td>
+                                    <td><strong>#<?= h($row["payment_id"]) ?></strong></td>
+                                    <td>#<?= h($row["booking_id"] ?? "-") ?></td>
+                                    <td>#<?= h($row["transaction_id"]) ?></td>
+                                    <td><?= h($row["payment_type"]) ?></td>
+                                    <td><strong><?= rupiah($row["total_amount"] ?? 0) ?></strong></td>
                                     <td>
-                                        <?php if ($pay['payment_type'] === 'Card'): ?>
-                                            <span class="badge bg-info-subtle text-info border border-info-subtle">
-                                                <i class="bi bi-credit-card-2-front me-1"></i> Card
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                                                <i class="bi bi-cash-stack me-1"></i> Cash
-                                            </span>
-                                        <?php endif; ?>
+                                        <span class="status status-<?= h($statusClass) ?>">
+                                            <?= h($status) ?>
+                                        </span>
                                     </td>
                                     <td class="text-muted">
-                                        <?= date('d M Y, H:i', strtotime($pay['payment_date'] ?? 'now')); ?>
-                                    </td>
-                                    <td class="fw-bold text-dark">
-                                        Rp <?= number_format((float)($pay['total_amount'] ?? 0), 0, ',', '.'); ?>
+                                        <?= !empty($row["payment_date"]) ? h(tanggal($row["payment_date"])) : "-" ?>
                                     </td>
                                     <td>
-                                        <?php 
-                                        $status = $pay['payment_status'];
-                                        $badge_class = 'bg-warning text-dark';
-                                        if ($status === 'Success') $badge_class = 'bg-success text-white';
-                                        if ($status === 'Failed') $badge_class = 'bg-danger text-white';
-                                        ?>
-                                        <span class="badge rounded-pill <?= $badge_class; ?>"><?= htmlspecialchars($status); ?></span>
+                                        <div class="d-flex gap-2">
+                                            <?php if ($canManage): ?>
+                                                <a class="btn-edit" href="edit_payment.php?payment_id=<?= (int)$row["payment_id"] ?>">Edit</a>
+                                                <a class="btn-cancel" href="cancel_payment.php?payment_id=<?= (int)$row["payment_id"] ?>" onclick="return confirm('Are you sure you want to cancel this payment?');">Cancel</a>
+                                            <?php elseif ($status === "Success"): ?>
+                                                <span class="btn-disabled">Completed</span>
+                                            <?php else: ?>
+                                                <span class="btn-disabled">Unavailable</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat pembayaran untuk akun Anda.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
 
-            <?php if ($total_pages > 1): ?>
-                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                    <div class="small text-muted">
-                        Menampilkan <?= $offset + 1; ?>–<?= min($offset + $limit, $total_rows); ?> dari <?= $total_rows; ?> data
-                    </div>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?= $page - 1; ?>"><i class="bi bi-chevron-left"></i></a>
-                            </li>
-
-                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
-                                    <a class="page-link" href="?page=<?= $i; ?>"><?= $i; ?></a>
+                <?php if ($total_pages > 1): ?>
+                    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                        <div class="small text-muted">
+                            Menampilkan <?= $offset + 1; ?>–<?= min($offset + $limit, $total_rows); ?> dari <?= $total_rows; ?> data
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
+                                    <a class="page-link" href="?page=<?= $page - 1; ?>"><i class="bi bi-chevron-left"></i></a>
                                 </li>
-                            <?php endfor; ?>
+                                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                    <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+                                        <a class="page-link" href="?page=<?= $i; ?>"><?= $i; ?></a>
+                                    </li>
+                                <?php endfor; ?>
+                                <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
+                                    <a class="page-link" href="?page=<?= $page + 1; ?>"><i class="bi bi-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                <?php endif; ?>
 
-                            <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?page=<?= $page + 1; ?>"><i class="bi bi-chevron-right"></i></a>
-                            </li>
-                        </ul>
-                    </nav>
+            <?php else: ?>
+                <div class="text-center py-5 text-muted">
+                    <h3 class="fs-5 fw-bold mb-2">No Payments Yet</h3>
+                    <p class="mb-0">Your payment transactions will appear here after checkout.</p>
                 </div>
             <?php endif; ?>
-        </section>
+        </div>
+
+        <a class="text-decoration-none fw-bold text-primary" href="booking.php">
+            ← Back to Booking
+        </a>
     </main>
 
     <aside class="right-panel">

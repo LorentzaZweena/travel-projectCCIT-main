@@ -88,6 +88,9 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             <a href="reviewsMenu.php" class="nav-link-custom active">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
             </a>
+            <a href="index.php" class="nav-link-custom">
+                <i class="bi bi-arrow-left"></i> <span>Back to home</span>  
+            </a>
         </nav>
 
         <a href="logout.php" class="btn-logout mt-0 mt-lg-auto">

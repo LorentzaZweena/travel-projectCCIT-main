@@ -2,7 +2,22 @@
 session_start();
 require_once 'koneksi.php';
 
-$user_id = $_SESSION['user_id'] ?? 1;
+function rupiah($angka) {
+    return 'Rp ' . number_format((float)($angka ?? 0), 0, ',', '.');
+}
+
+function tanggal($date) {
+    if (!$date) return '-';
+    return date('d M Y', strtotime($date));
+}
+
+function waktu($datetime) {
+    if (!$datetime) return '-';
+    return date('H:i', strtotime($datetime));
+}
+
+$user_id = (int)($_SESSION['user_id'] ?? 1);
+
 $query_user = "SELECT * FROM users WHERE user_id = $user_id LIMIT 1";
 $res_user = $conn->query($query_user);
 $user = $res_user ? $res_user->fetch_assoc() : ['name' => 'Budi Santoso', 'email' => 'budi@example.com'];
@@ -19,20 +34,26 @@ $total_pages = ceil($total_rows / $limit);
 
 $query_bookings = "
     SELECT 
-        b.booking_id, b.booking_date, b.trip_type, b.status AS booking_status, u.name AS booker_name, u.email AS booker_email, u.phone AS booker_phone, u.address AS booker_address,
+        b.booking_id, b.booking_date, b.trip_type,
+        b.transport_type,
+        b.travel_class,
+        b.status AS booking_status,
+        u.name AS booker_name, u.email AS booker_email, u.phone AS booker_phone, u.address AS booker_address,
         tp.trippergi_id, tp.travel_date AS pergi_travel_date, tp.departure_date AS pergi_dep_date,
         p_orig.name AS pergi_origin_name, p_orig.location AS pergi_origin_loc,
-        p_dest.place_id AS dest_place_id, p_dest.name AS pergi_dest_name, p_dest.location AS pergi_dest_loc, p_dest.category AS dest_category, p_dest.description AS dest_desc, p_dest.price AS dest_price, tpu.trippulang_id, tpu.travel_date AS pulang_travel_date, tpu.departure_date AS pulang_dep_date, pu_orig.name AS pulang_origin_name, pu_dest.name AS pulang_dest_name, t.transaction_id, t.total_amount, t.payment_status, pm.payment_id, pm.payment_type, pm.payment_date, pm.status AS pay_status, c.card_type, c.card_number, c.card_holder_name, c.expired_date, cs.amount_received FROM bookings b
-    
+        p_dest.place_id AS dest_place_id, p_dest.name AS pergi_dest_name, p_dest.location AS pergi_dest_loc, p_dest.category AS dest_category, p_dest.description AS dest_desc, p_dest.price AS dest_price,
+        tpu.trippulang_id, tpu.travel_date AS pulang_travel_date, tpu.departure_date AS pulang_dep_date, pu_orig.name AS pulang_origin_name, pu_dest.name AS pulang_dest_name,
+        t.transaction_id, t.total_amount, t.payment_status,
+        pm.payment_id, pm.payment_type, pm.payment_date, pm.status AS pay_status,
+        c.card_type, c.card_number, c.card_holder_name, c.expired_date, cs.amount_received
+    FROM bookings b
     JOIN users u ON b.user_id = u.user_id
     LEFT JOIN tripdetailspergi tp ON b.booking_id = tp.booking_id
     LEFT JOIN places p_orig ON tp.origin_id = p_orig.place_id
     LEFT JOIN places p_dest ON tp.destination_id = p_dest.place_id
-    
     LEFT JOIN tripdetailspulang tpu ON b.booking_id = tpu.booking_id
     LEFT JOIN places pu_orig ON tpu.origin_id = pu_orig.place_id
     LEFT JOIN places pu_dest ON tpu.destination_id = pu_dest.place_id
-    
     LEFT JOIN transactions t ON b.booking_id = t.booking_id
     LEFT JOIN payments pm ON t.transaction_id = pm.transaction_id
     LEFT JOIN cards c ON pm.payment_id = c.payment_id
@@ -71,6 +92,290 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/index2-style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        .ticket-modal-body {
+            background: #f4f7fb;
+            color: #17243a;
+            padding: 20px;
+        }
+
+        .modal-stepper {
+            max-width: 600px;
+            margin: 10px auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #20a978;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .modal-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #20a978;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .modal-line {
+            width: 45px;
+            height: 2px;
+            background: #20a978;
+        }
+
+        .modal-container-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .modal-card, .modal-summary {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(30, 60, 90, .05);
+        }
+
+        /* Success & Pending Banners */
+        .modal-success {
+            background: #e8f8f0;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-success-icon {
+            width: 36px;
+            height: 36px;
+            background: #20a978;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .modal-success h2 { font-size: 15px; margin: 0; }
+        .modal-success p { font-size: 11px; color: #65758b; margin: 2px 0 0; }
+
+        .modal-pending {
+            background: #fff6df;
+            border: 1px solid #f4d58a;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-pending-icon {
+            width: 36px;
+            height: 36px;
+            background: #f59e0b;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .modal-pending h2 { font-size: 15px; color: #9a6500; margin: 0; }
+        .modal-pending p { font-size: 11px; color: #8a6a2a; margin: 2px 0 0; }
+
+        .modal-label {
+            color: #1688f7;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            margin-bottom: 5px;
+        }
+
+        .modal-details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e7ed;
+        }
+
+        .modal-detail span { display: block; color: #8994a7; font-size: 10px; margin-bottom: 4px; }
+        .modal-detail strong { font-size: 12px; }
+        .modal-paid { color: #20a978; }
+        .modal-pending-status { color: #f59e0b; font-weight: 700; }
+
+        /* Transaction Table */
+        .modal-transaction {
+            margin-top: 20px;
+            border: 1px solid #dce5ef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-transaction-title {
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-transaction-title h2 { font-size: 15px; margin: 0; }
+
+        .modal-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .modal-badge-paid { background: #e5f8ef; color: #20a978; }
+        .modal-badge-pending { background: #fff1cf; color: #d88900; }
+
+        .modal-table {
+            display: grid;
+            grid-template-columns: 1.1fr 1.4fr .6fr 1fr .4fr 1fr;
+            padding: 10px 12px;
+            font-size: 11px;
+            gap: 6px;
+        }
+
+        .modal-table.header { background: #f5f8fc; color: #738096; font-weight: bold; }
+        .modal-table.total { display: flex; justify-content: flex-end; gap: 20px; border-top: 1px solid #e2e7ed; padding: 12px; }
+
+        /* Travel Ticket */
+        .modal-ticket {
+            margin-top: 20px;
+            background: #f4f9ff;
+            border: 1px solid #d8e9fa;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .modal-ticket h2 { margin-bottom: 12px; font-size: 16px; }
+        .modal-ticket-info { display: flex; gap: 20px; flex-wrap: wrap; }
+        .modal-ticket-info span { display: block; color: #8290a3; font-size: 9px; margin-bottom: 3px; }
+        .modal-ticket-info strong { font-size: 11px; }
+
+       
+.modal-qr-wrapper {
+    width: 110px;
+    height: 110px;
+    background: white;
+    border: 1px solid #d6deea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+
+        .modal-download {
+            width: 100%;
+            margin-top: 15px;
+            height: 42px;
+            border: none;
+            border-radius: 8px;
+            background: #1688f7;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .modal-download:hover { background: #0876df; }
+
+        /* Next Steps & Pending */
+        .modal-next-steps {
+            margin-top: 15px;
+            background: #fff6df;
+            border-radius: 10px;
+            padding: 12px 15px;
+        }
+
+        .modal-next-steps-title { font-weight: bold; color: #9a6500; margin-bottom: 6px; font-size: 12px; }
+        .modal-next-steps ol { padding-left: 18px; color: #7f682f; font-size: 11px; margin: 0; line-height: 1.6; }
+
+        .modal-ticket-pending {
+            margin-top: 15px;
+            background: #f3f6fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-align: center;
+            color: #718096;
+        }
+
+        /* Summary */
+        .modal-summary h2 { font-size: 16px; margin-bottom: 15px; }
+        .modal-route {
+            border: 1px solid #dce5ef;
+            padding: 12px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: 1fr 20px 1fr;
+            text-align: center;
+        }
+
+        .modal-route small { color: #8994a7; font-size: 8px; }
+        .modal-route strong { display: block; font-size: 10px; margin-top: 3px; }
+
+        .modal-summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 11px;
+        }
+
+        .modal-summary-row span { color: #8490a3; }
+
+        .modal-total-price {
+            background: #eef9f4;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-total-price strong { color: #20a978; font-size: 16px; }
+
+        @media (max-width: 900px) {
+            .modal-container-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
@@ -93,6 +398,9 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             </a>
             <a href="reviewsMenu.php" class="nav-link-custom">
                 <i class="bi bi-star-fill"></i> <span>Reviews</span>
+            </a>
+            <a href="index.php" class="nav-link-custom">
+                <i class="bi bi-arrow-left"></i> <span>Back to home</span>  
             </a>
         </nav>
 
@@ -196,7 +504,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
                 </table>
             </div>
 
-            <!-- Paginasi -->
             <?php if ($total_pages > 1): ?>
                 <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
                     <div class="small text-muted">
@@ -224,7 +531,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
         </section>
     </main>
 
-    <!-- PANEL KANAN -->
     <aside class="right-panel">
         <div class="d-flex align-items-center gap-3 mb-4">
             <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" class="rounded-circle" width="44" height="44" style="object-fit:cover;" alt="Profile">
@@ -238,10 +544,7 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
         <div class="transport-grid">
             <div class="transport-box" title="Pesawat"><i class="bi bi-airplane-fill"></i><span>Flight</span></div>
             <div class="transport-box" title="Kereta Api"><i class="bi bi-train-front-fill"></i><span>Train</span></div>
-            <div class="transport-box" title="Kapal Laut"><i class="bi bi-tsunami"></i><span>Ship</span></div>
             <div class="transport-box" title="Bus"><i class="bi bi-bus-front-fill"></i><span>Bus</span></div>
-            <div class="transport-box" title="Bayi / Infant"><i class="bi bi-person-arms-up"></i><span>Infant</span></div>
-            <div class="transport-box" title="Mobil"><i class="bi bi-car-front-fill"></i><span>Taxi</span></div>
         </div>
 
         <h6 class="fw-bold mb-3 small">My Card</h6>
@@ -265,7 +568,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
             </div>
         </div>
     </aside>
-
 </div>
 
 <?php 
@@ -275,218 +577,370 @@ if ($res_bookings && $res_bookings->num_rows > 0):
         $bk_id = $b['booking_id'];
         $trippergi_id = $b['trippergi_id'] ?? 0;
         $trippulang_id = $b['trippulang_id'] ?? 0;
-        $trans_id = $b['transaction_id'] ?? 0;
-        $dest_place_id = $b['dest_place_id'] ?? 0;
+        $trans_id = (int)($b['transaction_id'] ?? 0);
+
+// Transportasi sesuai pilihan saat booking
+$transportType = $b['transport_type'] ?? 'Bus';
+
+$transportConfig = [
+    'Bus' => [
+        'icon' => 'bi-bus-front-fill',
+        'title' => 'BUS EXPRESS TICKET',
+        'operator' => 'PO Travel Express',
+        'download' => 'Download Bus Ticket'
+    ],
+    'Kereta Api' => [
+        'icon' => 'bi-train-front-fill',
+        'title' => 'TRAIN TICKET',
+        'operator' => 'Railway Service',
+        'download' => 'Download Train Ticket'
+    ],
+    'Pesawat' => [
+        'icon' => 'bi-airplane-fill',
+        'title' => 'FLIGHT TICKET',
+        'operator' => 'Airline Service',
+        'download' => 'Download Flight Ticket'
+    ]
+];
+
+$transport = $transportConfig[$transportType]
+    ?? $transportConfig['Bus'];
+
+$trippergi_id = $b['trippergi_id'] ?? 0;
+$trippulang_id = $b['trippulang_id'] ?? 0;
+$trans_id = (int)($b['transaction_id'] ?? 0);
 
         $q_pass_pergi = "
-            SELECT pg.passenger_id, pg.name, pg.category, pg.ID, pg.birth_date, pp.seat_number,
-                   inf.name AS infant_name
+            SELECT pg.passenger_id, pg.name, pg.category, pg.ID, pg.birth_date, pp.seat_number
             FROM passengerpergi pp
             JOIN passengers pg ON pp.passenger_id = pg.passenger_id
-            LEFT JOIN companion comp ON pg.passenger_id = comp.parent_id
-            LEFT JOIN passengers inf ON comp.infant_id = inf.passenger_id
             WHERE pp.trippergi_id = $trippergi_id
+            LIMIT 1
         ";
         $res_pass_pergi = $conn->query($q_pass_pergi);
+        $passenger = $res_pass_pergi ? $res_pass_pergi->fetch_assoc() : null;
 
-        $q_pass_pulang = "
-            SELECT pg.passenger_id, pg.name, pp.seat_number
-            FROM passengerpulang pp
-            JOIN passengers pg ON pp.passenger_id = pg.passenger_id
-            WHERE pp.trippulang_id = $trippulang_id
-        ";
-        $res_pass_pulang = $conn->query($q_pass_pulang);
-        $seats_pulang = [];
-        if ($res_pass_pulang) {
-            while ($sp = $res_pass_pulang->fetch_assoc()) {
-                $seats_pulang[$sp['passenger_id']] = $sp['seat_number'];
-            }
-        }
+        $payment_status = $b['payment_status'] ?? 'Pending';
+        $is_paid = in_array(strtolower(trim($payment_status)), ['paid', 'success', 'completed'], true);
 
-        $q_trans_det = "
-            SELECT td.*, pg.name AS pass_name
-            FROM transactiondetails td
-            LEFT JOIN passengers pg ON td.passenger_id = pg.passenger_id
-            WHERE td.transaction_id = $trans_id
-        ";
-        $res_trans_det = $conn->query($q_trans_det);
+        $payment_type = $b['payment_type'] ?? '';
+        $display_payment_type = ($payment_type === 'Card') 
+            ? 'Credit / Debit Card' 
+            : (($payment_type === 'Cash') ? 'Cash' : 'Unknown');
 
-        $q_review = "SELECT * FROM reviews WHERE place_id = $dest_place_id ORDER BY review_id DESC LIMIT 1";
-        $res_review = $conn->query($q_review);
-        $review_data = $res_review ? $res_review->fetch_assoc() : null;
+        $total_amount = (float)($b['total_amount'] ?? $b['dest_price'] ?? 0);
+
+        $qr_data = [
+            "type" => "TRAVEL TICKET",
+            "booking_id" => $bk_id,
+            "transaction_id" => "TRX-" . str_pad($trans_id, 5, "0", STR_PAD_LEFT),
+            "passenger" => $passenger['name'] ?? "-",
+            "route" => ($b['pergi_origin_name'] ?? "-") . " -> " . ($b['pergi_dest_name'] ?? "-"),
+            "departure" => tanggal($b['pergi_travel_date'] ?? null),
+            "time" => waktu($b['pergi_dep_date'] ?? null),
+            "seat" => $passenger['seat_number'] ?? "-",
+            "status" => $payment_status
+        ];
 ?>
+
 <div class="modal fade" id="ticketModal<?= $bk_id; ?>" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
             
-            <div class="modal-header text-white p-4" style="background: linear-gradient(135deg, #5d5fef 0%, #3b82f6 100%);">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="bg-white text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-compass-fill fs-5"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold lh-1">E-TICKET / BOARDING PASS</h5>
-                        <small class="opacity-75">Booking ID: #BK-<?= str_pad($bk_id, 4, '0', STR_PAD_LEFT); ?></small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 bg-white pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body p-4">
-                <div class="p-3 bg-light rounded-4 mb-4 border">
-                    <div class="row align-items-center text-center text-md-start g-3">
-                        <div class="col-md-5">
-                            <span class="badge bg-primary mb-1">PEMBERANGKATAN</span>
-                            <h5 class="fw-bold text-dark mb-0"><?= htmlspecialchars($b['pergi_origin_name'] ?? 'Origin'); ?></h5>
-                            <small class="text-muted"><i class="bi bi-clock me-1"></i><?= htmlspecialchars($b['pergi_dep_date'] ?? $b['pergi_travel_date']); ?></small>
-                        </div>
-                        <div class="col-md-2 text-center my-2 my-md-0">
-                            <i class="bi bi-airplane-fill fs-3 text-primary d-none d-md-inline-block"></i>
-                            <div class="extra-small text-primary fw-bold"><?= htmlspecialchars($b['trip_type']); ?></div>
-                        </div>
-                        <div class="col-md-5 text-md-end">
-                            <span class="badge bg-success mb-1">DESTINASI</span>
-                            <h5 class="fw-bold text-dark mb-0"><?= htmlspecialchars($b['pergi_dest_name'] ?? 'Destination'); ?></h5>
-                            <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($b['pergi_dest_loc'] ?? 'Indonesia'); ?></small>
-                        </div>
+            <div class="modal-body ticket-modal-body">
+                <div class="modal-stepper">
+                    <div class="modal-step">
+                        <div class="modal-circle">✓</div> Passenger
                     </div>
+                    <div class="modal-line"></div>
+                    <div class="modal-step">
+                        <div class="modal-circle">✓</div> Payment
+                    </div>
+                    <div class="modal-line"></div>
+                    <div class="modal-step">
+                        <div class="modal-circle">✓</div> Confirmation
+                    </div>
+                </div>
 
-                    <?php if ($b['trip_type'] === 'RoundTrip' && !empty($b['pulang_origin_name'])): ?>
-                        <hr class="my-3">
-                        <div class="row align-items-center text-center text-md-start g-3">
-                            <div class="col-md-5">
-                                <span class="badge bg-secondary mb-1">PULANG</span>
-                                <h6 class="fw-bold text-dark mb-0"><?= htmlspecialchars($b['pulang_origin_name']); ?></h6>
-                                <small class="text-muted"><i class="bi bi-clock me-1"></i><?= htmlspecialchars($b['pulang_dep_date'] ?? $b['pulang_travel_date']); ?></small>
+                <div class="modal-container-grid">
+                    <main class="modal-card">
+                        <?php if ($is_paid): ?>
+                            <div class="modal-success">
+                                <div class="modal-success-icon">✓</div>
+                                <div>
+                                    <h2>Your booking is confirmed!</h2>
+                                    <p>Your payment has been successfully processed.</p>
+                                </div>
                             </div>
-                            <div class="col-md-2 text-center">
-                                <i class="bi bi-arrow-left-right text-muted"></i>
+                        <?php else: ?>
+                            <div class="modal-pending">
+                                <div class="modal-pending-icon">!</div>
+                                <div>
+                                    <h2>Payment Pending</h2>
+                                    <p>Your booking has been reserved, but the payment has not been completed yet.</p>
+                                </div>
                             </div>
-                            <div class="col-md-5 text-md-end">
-                                <span class="badge bg-secondary mb-1">KEMBALI KE</span>
-                                <h6 class="fw-bold text-dark mb-0"><?= htmlspecialchars($b['pulang_dest_name']); ?></h6>
+                        <?php endif; ?>
+
+                        <div class="modal-label">BOOKING INFORMATION</div>
+                        <h1 class="fs-3 fw-bold mb-3">Booking Details</h1>
+
+                        <div class="modal-details-grid">
+                            <div class="modal-detail">
+                                <span>Passenger</span>
+                                <strong><?= htmlspecialchars($passenger['name'] ?? '-') ?></strong>
+                            </div>
+                            <div class="modal-detail">
+                                <span>Seat Number</span>
+                                <strong><?= htmlspecialchars($passenger['seat_number'] ?? '-') ?></strong>
+                            </div>
+                            <div class="modal-detail">
+                                <span>Booking Number</span>
+                                <strong>#<?= $bk_id ?></strong>
+                            </div>
+                            <div class="modal-detail">
+                                <span>Transaction ID</span>
+                                <strong>TRX-<?= str_pad($trans_id, 5, "0", STR_PAD_LEFT) ?></strong>
+                            </div>
+                            <div class="modal-detail">
+                                <span>Payment Method</span>
+                                <strong><?= htmlspecialchars($display_payment_type) ?></strong>
+                            </div>
+                            <div class="modal-detail">
+                                <span>Payment Status</span>
+                                <strong class="<?= $is_paid ? 'modal-paid' : 'modal-pending-status' ?>">
+                                    <?= htmlspecialchars($payment_status) ?>
+                                </strong>
                             </div>
                         </div>
-                    <?php endif; ?>
-                </div>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded-3 h-100">
-                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-circle me-1 text-primary"></i> Data Pemesan</h6>
-                            <div class="small mb-1"><strong>Nama:</strong> <?= htmlspecialchars($b['booker_name']); ?></div>
-                            <div class="small mb-1"><strong>Email:</strong> <?= htmlspecialchars($b['booker_email']); ?></div>
-                            <div class="small mb-1"><strong>Telepon:</strong> <?= htmlspecialchars($b['booker_phone']); ?></div>
-                            <div class="small"><strong>Alamat:</strong> <?= htmlspecialchars($b['booker_address']); ?></div>
+                        <div class="modal-transaction">
+                            <div class="modal-transaction-title">
+                                <div>
+                                    <div class="modal-label">TRANSACTION</div>
+                                    <h2>Transaction Details</h2>
+                                </div>
+                                <span class="modal-badge <?= $is_paid ? 'modal-badge-paid' : 'modal-badge-pending' ?>">
+                                    <?= $is_paid ? 'Paid' : 'Pending' ?>
+                                </span>
+                            </div>
+
+                            <div class="modal-table header">
+                                <span>Passenger</span>
+                                <span>Route</span>
+                                <span>Seat</span>
+                                <span>Price</span>
+                                <span>Qty</span>
+                                <span>Subtotal</span>
+                            </div>
+
+                            <div class="modal-table">
+                                <span><?= htmlspecialchars($passenger['name'] ?? '-') ?></span>
+                                <span>
+                                    <?= htmlspecialchars($b['pergi_origin_name'] ?? '-') ?> → <?= htmlspecialchars($b['pergi_dest_name'] ?? '-') ?>
+                                </span>
+                                <span><?= htmlspecialchars($passenger['seat_number'] ?? '-') ?></span>
+                                <span><?= rupiah($total_amount) ?></span>
+                                <span>1</span>
+                                <span><?= rupiah($total_amount) ?></span>
+                            </div>
+
+                            <div class="modal-table total">
+                                <span>Total</span>
+                                <strong><?= rupiah($total_amount) ?></strong>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded-3 h-100">
-                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-credit-card-2-back me-1 text-primary"></i> Pembayaran</h6>
-                            <div class="small mb-1"><strong>Status Bayar:</strong> <span class="badge bg-success"><?= htmlspecialchars($b['payment_status'] ?? 'Paid'); ?></span></div>
-                            <div class="small mb-1"><strong>Metode:</strong> <?= htmlspecialchars($b['payment_type'] ?? 'Card'); ?></div>
-                            
-                            <?php if ($b['payment_type'] === 'Card'): ?>
-                                <div class="small mb-1"><strong>Kartu:</strong> <?= htmlspecialchars($b['card_type'] ?? 'MasterCard'); ?> (<?= htmlspecialchars($b['card_number'] ?? '****'); ?>)</div>
-                                <div class="small"><strong>Atas Nama:</strong> <?= htmlspecialchars($b['card_holder_name'] ?? $b['booker_name']); ?></div>
-                            <?php else: ?>
-                                <div class="small"><strong>Jumlah Diterima:</strong> Rp <?= number_format((float)($b['amount_received'] ?? $b['total_amount']), 0, ',', '.'); ?></div>
-                            <?php endif; ?>
+
+                        <?php if ($is_paid): ?>
+                            <div class="modal-ticket" id="travelTicket_<?= $bk_id; ?>">
+                                <div class="w-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="modal-label text-primary fw-bold" style="font-size: 11px;">
+                                          <i class="bi <?= htmlspecialchars($transport['icon']) ?> me-1 fs-6"></i>
+                                            <?= htmlspecialchars($transport['title']) ?>
+
+                                        </div>
+                                        <span class="badge bg-primary text-white px-2 py-1" style="font-size: 10px; border-radius: 6px;">
+                                        <?= htmlspecialchars([
+                                        'Economy' => 'Economy Class',
+                                        'Business' => 'Business Class',
+                                        'First' => 'First Class'
+                                        ][$b['travel_class'] ?? 'Economy'] ?? 'Economy Class') ?>
+                                        </span>
+                                    </div>
+
+                                    <h2 class="fs-5 fw-bold mb-3">
+                                        <?= htmlspecialchars($b['pergi_origin_name'] ?? '-') ?> &rarr; <?= htmlspecialchars($b['pergi_dest_name'] ?? '-') ?>
+                                    </h2>
+
+                                    <div class="modal-ticket-info">
+                                        <div>
+                                            <span>Passenger</span>
+                                            <strong><?= htmlspecialchars($passenger['name'] ?? '-') ?></strong>
+                                        </div>
+                                        <div>
+                                            <span>Operator / Armada</span>
+                                            <strong><?= htmlspecialchars($transport['operator']) ?></strong>
+                                        </div>
+                                        <div>
+                                            <span>Departure Date</span>
+                                            <strong><?= tanggal($b['pergi_travel_date'] ?? null) ?></strong>
+                                        </div>
+                                        <div>
+                                            <span>Time</span>
+                                            <strong><?= waktu($b['pergi_dep_date'] ?? null) ?> WIB</strong>
+                                        </div>
+                                        <div>
+                                            <span>Seat No.</span>
+                                            <strong class="text-primary fs-6"><?= htmlspecialchars($passenger['seat_number'] ?? '-') ?></strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-qr-wrapper ms-3">
+                                    <div id="qrcode_<?= $bk_id; ?>"></div>
+                                </div>
+                            </div>
+
+                            <button class="modal-download" type="button" onclick="downloadTicket_<?= $bk_id; ?>()">
+                               <i class="bi bi-download me-1"></i>
+                               <?= htmlspecialchars($transport['download']) ?>
+
+                            </button>
+                        <?php else: ?>
+                            <div class="modal-next-steps">
+                                <div class="modal-next-steps-title">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Next Steps for <?= htmlspecialchars($transportType) ?> Ticket
+                                </div>
+                                <ol>
+                                    <li>Please pay the exact amount at the <?= htmlspecialchars($transportType) ?> counter / agent.</li>
+                                    <li>Show your booking number: #<?= $bk_id ?>.</li>
+                                    <li>After payment, your <?= htmlspecialchars($transportType) ?> ticket will be issued automatically.</li>
+                                </ol>
+                            </div>
+
+                            <div class="modal-ticket-pending">
+                                <i class="bi <?= htmlspecialchars($transport['icon']) ?> fs-3 text-warning"></i>
+                                <div>
+                                    <strong class="d-block small"><?= htmlspecialchars($transportType) ?> ticket will be available</strong>
+                                    <span class="extra-small text-muted">after counter payment is completed.</span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                    </main>
+
+                    <aside class="modal-summary">
+                        <h2>Booking Summary</h2>
+
+                        <div class="modal-route">
+                            <div>
+                                <small>FROM</small>
+                                <strong><?= htmlspecialchars($b['pergi_origin_name'] ?? '-') ?></strong>
+                            </div>
+                            <b>→</b>
+                            <div>
+                                <small>TO</small>
+                                <strong><?= htmlspecialchars($b['pergi_dest_name'] ?? '-') ?></strong>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-people me-1 text-primary"></i> Daftar Penumpang & Kursi</h6>
-                <div class="table-responsive rounded-3 border mb-4">
-                    <table class="table table-sm table-striped align-middle mb-0 extra-small" style="font-size:0.82rem;">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nama Penumpang</th>
-                                <th>Kategori</th>
-                                <th>NIK / ID</th>
-                                <th>Kursi Pergi</th>
-                                <?php if ($b['trip_type'] === 'RoundTrip'): ?><th>Kursi Pulang</th><?php endif; ?>
-                                <th>Pendamping (Infant)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($res_pass_pergi && $res_pass_pergi->num_rows > 0): ?>
-                                <?php while ($p = $res_pass_pergi->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="fw-bold"><?= htmlspecialchars($p['name']); ?></td>
-                                        <td><span class="badge bg-info-subtle text-info"><?= htmlspecialchars($p['category']); ?></span></td>
-                                        <td><?= htmlspecialchars($p['ID']); ?></td>
-                                        <td class="fw-bold text-primary"><?= htmlspecialchars($p['seat_number'] ?? '-'); ?></td>
-                                        <?php if ($b['trip_type'] === 'RoundTrip'): ?>
-                                            <td class="fw-bold text-primary"><?= htmlspecialchars($seats_pulang[$p['passenger_id']] ?? '-'); ?></td>
-                                        <?php endif; ?>
-                                        <td>
-                                            <?= !empty($p['infant_name']) ? '<span class="badge bg-warning text-dark"><i class="bi bi-person-arms-up me-1"></i>' . htmlspecialchars($p['infant_name']) . '</span>' : '<span class="text-muted">-</span>'; ?>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" class="text-center text-muted">Data penumpang tidak ditemukan.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <?php if ($res_trans_det && $res_trans_det->num_rows > 0): ?>
-                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-receipt me-1 text-primary"></i> Rincian Biaya</h6>
-                    <div class="table-responsive rounded-3 border mb-3">
-                        <table class="table table-sm align-middle mb-0 extra-small" style="font-size:0.82rem;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Item / Penumpang</th>
-                                    <th>Harga Tiket</th>
-                                    <th>Qty</th>
-                                    <th class="text-end">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($td = $res_trans_det->fetch_assoc()): ?>
-                                    <tr>
-                                        <td>Tiket Wisata (<?= htmlspecialchars($td['pass_name'] ?? 'Penumpang'); ?>)</td>
-                                        <td>Rp <?= number_format((float)$td['ticket_price'], 0, ',', '.'); ?></td>
-                                        <td><?= htmlspecialchars($td['quantity']); ?></td>
-                                        <td class="text-end fw-bold">Rp <?= number_format((float)$td['subtotal'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($review_data): ?>
-                    <div class="p-3 bg-warning-subtle rounded-3 border border-warning-subtle d-flex align-items-center justify-content-between">
-                        <div>
-                            <small class="fw-bold text-dark"><i class="bi bi-star-fill text-warning me-1"></i> Ulasan Destinasi <?= htmlspecialchars($b['pergi_dest_name']); ?></small>
-                            <div class="extra-small text-secondary">"<?= htmlspecialchars($review_data['comment']); ?>"</div>
+                        <div class="modal-summary-row mt-3">
+                            <span>Departure</span>
+                            <strong>
+                                <?= tanggal($b['pergi_travel_date'] ?? null) ?> · <?= waktu($b['pergi_dep_date'] ?? null) ?>
+                            </strong>
                         </div>
-                        <span class="badge bg-warning text-dark fw-bold fs-6"><?= htmlspecialchars($review_data['rating']); ?>.0</span>
-                    </div>
-                <?php endif; ?>
 
-            </div>
+                        <?php if (!empty($b['pulang_origin_name'])): ?>
+                            <div class="modal-summary-row">
+                                <span>Return</span>
+                                <strong>
+                                    <?= tanggal($b['pulang_travel_date'] ?? null) ?> · <?= waktu($b['pulang_dep_date'] ?? null) ?>
+                                </strong>
+                            </div>
+                        <?php endif; ?>
 
-            <div class="modal-footer bg-light border-0 d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted extra-small">TOTAL PEMBAYARAN:</span>
-                    <h5 class="fw-bold text-primary mb-0">Rp <?= number_format((float)($b['total_amount'] ?? $b['dest_price']), 0, ',', '.'); ?></h5>
+                        <div class="modal-summary-row">
+                            <span>Passenger</span>
+                            <strong>1 Person</strong>
+                        </div>
+
+                        <div class="modal-summary-row">
+                            <span>Payment</span>
+                            <strong><?= htmlspecialchars($display_payment_type) ?></strong>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <div class="modal-summary-row">
+                            <span>Trip Price</span>
+                            <strong><?= rupiah($total_amount) ?></strong>
+                        </div>
+
+                        <div class="modal-summary-row">
+                            <span>Service Fee</span>
+                            <strong>Rp 0</strong>
+                        </div>
+
+                        <div class="modal-total-price mt-2">
+                            <span>Total Price</span>
+                            <strong><?= rupiah($total_amount) ?></strong>
+                        </div>
+                    </aside>
+
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" onclick="window.print();">
-                        <i class="bi bi-printer me-1"></i> Cetak Tiket
-                    </button>
-                </div>
+
             </div>
 
         </div>
     </div>
 </div>
+
+<script>
+<?php if ($is_paid): ?>
+document.addEventListener("DOMContentLoaded", function() {
+    const qrElement = document.getElementById("qrcode_<?= $bk_id; ?>");
+    if (qrElement) {
+        new QRCode(qrElement, {
+            text: "TRAVEL-BOOKING-<?= $bk_id; ?>",
+            width: 90,
+            height: 90,
+            colorDark: "#17243a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    }
+});
+
+function downloadTicket_<?= $bk_id; ?>() {
+    const ticket = document.getElementById("travelTicket_<?= $bk_id; ?>");
+    if (!ticket) {
+        alert("Ticket tidak ditemukan.");
+        return;
+    }
+
+    html2canvas(ticket, {
+        scale: 3,
+        backgroundColor: "#ffffff",
+        useCORS: true
+    }).then(function(canvas) {
+        const link = document.createElement("a");
+        link.download = "Travel_Ticket_Booking_<?= $bk_id; ?>.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }).catch(function(error) {
+        console.error(error);
+        alert("Ticket gagal didownload.");
+    });
+}
+<?php endif; ?>
+</script>
+
 <?php 
     endwhile; 
 endif; 

@@ -350,21 +350,9 @@ if (!$result) {
                 <i class="bi bi-train-front-fill"></i>
                 <span>Train</span>
             </div>
-            <div class="transport-box" title="Kapal Laut">
-                <i class="bi bi-tsunami"></i>
-                <span>Ship</span>
-            </div>
             <div class="transport-box" title="Bus">
                 <i class="bi bi-bus-front-fill"></i>
                 <span>Bus</span>
-            </div>
-            <div class="transport-box" title="Bayi / Infant">
-                <i class="bi bi-person-arms-up"></i>
-                <span>Infant</span>
-            </div>
-            <div class="transport-box" title="Mobil">
-                <i class="bi bi-car-front-fill"></i>
-                <span>Taxi</span>
             </div>
         </div>
 

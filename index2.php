@@ -14,16 +14,11 @@ $query_user = "SELECT * FROM users WHERE user_id = $user_id LIMIT 1";
 $res_user = $conn->query($query_user);
 $user = ($res_user && $res_user->num_rows > 0) ? $res_user->fetch_assoc() : ['name' => 'User', 'email' => ''];
 
-$query_places = "SELECT * FROM places ORDER BY place_id ASC LIMIT 3";
+$query_places = "SELECT * FROM places ORDER BY place_id ASC";
 $res_places = $conn->query($query_places);
 
 $query_bookings = "SELECT b.booking_id, b.booking_date, b.trip_type, b.status, 
-                          p.name AS place_name, p.location 
-                   FROM bookings b
-                   LEFT JOIN tripdetailspergi t ON b.booking_id = t.booking_id
-                   LEFT JOIN places p ON t.destination_id = p.place_id
-                   WHERE b.user_id = $user_id
-                   ORDER BY b.booking_id DESC LIMIT 4";
+                          p.name AS place_name, p.location FROM bookings b LEFT JOIN tripdetailspergi t ON b.booking_id = t.booking_id LEFT JOIN places p ON t.destination_id = p.place_id WHERE b.user_id = $user_id ORDER BY b.booking_id DESC LIMIT 4";
 $res_bookings = $conn->query($query_bookings);
 
 $query_reviews = "SELECT r.*, u.name AS user_name, p.name AS place_name, p.location, p.price, p.image_url 
@@ -59,6 +54,55 @@ $fallback_images = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/index2-style.css">
+
+    <style>
+        .places-scroll-container {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .places-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .places-scroll-container::-webkit-scrollbar-track {
+            background: #edf2f7;
+            border-radius: 10px;
+        }
+
+        .places-scroll-container::-webkit-scrollbar-thumb {
+            background: #1688f7;
+            border-radius: 10px;
+        }
+
+        .places-scroll-item {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+        }
+
+        .btn-arrow-booking {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1688f7;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-arrow-booking:hover {
+            background: #0d6efd;
+            color: white;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
 
@@ -101,9 +145,14 @@ $fallback_images = [
         </header>
 
         <section class="mb-4">
-            <h5 class="fw-bold mb-3">Places</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Places</h5>
+                <span class="text-muted extra-small" style="font-size: 0.75rem;">
+                    <i class="bi bi-arrow-left-right me-1"></i>Geser untuk lihat lainnya
+                </span>
+            </div>
 
-            <div class="row g-3">
+            <div class="places-scroll-container">
                 <?php 
                 $idx = 0;
                 if ($res_places && $res_places->num_rows > 0): 
@@ -113,7 +162,7 @@ $fallback_images = [
                                : $fallback_images[$idx % 3];
                         $idx++;
                 ?>
-                    <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="places-scroll-item">
                         <div class="place-card">
                             <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($place['name']); ?>">
                             <div class="place-card-overlay">
@@ -121,7 +170,15 @@ $fallback_images = [
                                 <div class="small opacity-75 mb-1"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($place['location']); ?></div>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <span class="badge bg-light text-dark fw-bold">Rp <?= number_format((float)$place['price'], 0, ',', '.'); ?></span>
-                                    <span class="small text-warning"><i class="bi bi-star-fill"></i> 4.8</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="small text-warning"><i class="bi bi-star-fill"></i> 4.8</span>
+
+                                        <a href="bookingMenu.php?place_id=<?= (int)$place['place_id']; ?>" 
+                                           class="btn-arrow-booking shadow-sm" 
+                                           title="Booking tempat ini">
+                                            <i class="bi bi-arrow-right fw-bold"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -137,7 +194,6 @@ $fallback_images = [
             <div class="col-12 col-xl-7">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold mb-0">Bookings</h6>
-                    <!-- <span class="badge bg-light text-secondary">Database Connected</span> -->
                 </div>
 
                 <div class="table-responsive rounded-3 border-0">
@@ -153,51 +209,49 @@ $fallback_images = [
                         <tbody>
                             <?php if ($res_bookings && $res_bookings->num_rows > 0): ?>
                                 <?php while ($b = $res_bookings->fetch_assoc()): ?>
-                                    
-<tr>
-    <td class="fw-semibold text-dark">
-        <div class="text-truncate" style="max-width: 140px;">
-            <?= htmlspecialchars($b['place_name'] ?? 'Wisata Indonesia'); ?>
-        </div>
-        <small class="text-muted fw-normal">
-            <?= htmlspecialchars($b['location'] ?? 'Indonesia'); ?>
-        </small>
-    </td>
+                                    <tr>
+                                        <td class="fw-semibold text-dark">
+                                            <div class="text-truncate" style="max-width: 140px;">
+                                                <?= htmlspecialchars($b['place_name'] ?? 'Wisata Indonesia'); ?>
+                                            </div>
+                                            <small class="text-muted fw-normal">
+                                                <?= htmlspecialchars($b['location'] ?? 'Indonesia'); ?>
+                                            </small>
+                                        </td>
 
-    <td>
-        <span class="badge bg-primary-subtle text-primary">
-            <?= htmlspecialchars($b['trip_type']); ?>
-        </span>
-    </td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <?= htmlspecialchars($b['trip_type']); ?>
+                                            </span>
+                                        </td>
 
-    <td>
-        <?php
-        $status = $b['status'];
-        $badge_class = 'bg-warning text-dark';
+                                        <td>
+                                            <?php
+                                            $status = $b['status'];
+                                            $badge_class = 'bg-warning text-dark';
 
-        if ($status === 'Completed' || $status === 'Confirmed') {
-            $badge_class = 'bg-success text-white';
-        } elseif ($status === 'Cancelled') {
-            $badge_class = 'bg-danger text-white';
-        }
-        ?>
-        <span class="badge rounded-pill <?= $badge_class; ?>">
-            <?= htmlspecialchars($status); ?>
-        </span>
-    </td>
+                                            if ($status === 'Completed' || $status === 'Confirmed') {
+                                                $badge_class = 'bg-success text-white';
+                                            } elseif ($status === 'Cancelled') {
+                                                $badge_class = 'bg-danger text-white';
+                                            }
+                                            ?>
+                                            <span class="badge rounded-pill <?= $badge_class; ?>">
+                                                <?= htmlspecialchars($status); ?>
+                                            </span>
+                                        </td>
 
-    <td>
-        <button
-            type="button"
-            class="btn btn-sm btn-primary rounded-pill px-3"
-            data-bs-toggle="modal"
-            data-bs-target="#ticketModal<?= (int)$b['booking_id']; ?>">
-            <i class="bi bi-ticket-perforated me-1"></i>
-            View Ticket
-        </button>
-    </td>
-</tr>
-
+                                        <td>
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-primary rounded-pill px-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#ticketModal<?= (int)$b['booking_id']; ?>">
+                                                <i class="bi bi-ticket-perforated me-1"></i>
+                                                View Ticket
+                                            </button>
+                                        </td>
+                                    </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr><td colspan="4" class="text-center text-muted">Belum ada data booking.</td></tr>
@@ -358,21 +412,9 @@ endif;
                 <i class="bi bi-train-front-fill"></i>
                 <span>Train</span>
             </div>
-            <div class="transport-box" title="Kapal Laut">
-                <i class="bi bi-tsunami"></i>
-                <span>Ship</span>
-            </div>
             <div class="transport-box" title="Bus">
                 <i class="bi bi-bus-front-fill"></i>
                 <span>Bus</span>
-            </div>
-            <div class="transport-box" title="Bayi / Infant">
-                <i class="bi bi-person-arms-up"></i>
-                <span>Infant</span>
-            </div>
-            <div class="transport-box" title="Mobil">
-                <i class="bi bi-car-front-fill"></i>
-                <span>Taxi</span>
             </div>
         </div>
 

@@ -205,7 +205,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
                 </table>
             </div>
 
-            <!-- Paginasi -->
             <?php if ($total_pages > 1): ?>
                 <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
                     <div class="small text-muted">
@@ -233,7 +232,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
         </section>
     </main>
 
-    <!-- PANEL KANAN -->
     <aside class="right-panel">
         <div class="d-flex align-items-center gap-3 mb-4">
             <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" class="rounded-circle" width="44" height="44" style="object-fit:cover;" alt="Profile">
@@ -247,10 +245,7 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
         <div class="transport-grid">
             <div class="transport-box" title="Pesawat"><i class="bi bi-airplane-fill"></i><span>Flight</span></div>
             <div class="transport-box" title="Kereta Api"><i class="bi bi-train-front-fill"></i><span>Train</span></div>
-            <div class="transport-box" title="Kapal Laut"><i class="bi bi-tsunami"></i><span>Ship</span></div>
             <div class="transport-box" title="Bus"><i class="bi bi-bus-front-fill"></i><span>Bus</span></div>
-            <div class="transport-box" title="Bayi / Infant"><i class="bi bi-person-arms-up"></i><span>Infant</span></div>
-            <div class="transport-box" title="Mobil"><i class="bi bi-car-front-fill"></i><span>Taxi</span></div>
         </div>
 
         <h6 class="fw-bold mb-3 small">My Card</h6>
@@ -277,7 +272,6 @@ $formatted_card_number = implode(' ', str_split($raw_card_number, 4));
 
 </div>
 
-<!-- MODAL DETAIL ULASAN -->
 <?php 
 if ($res_reviews && $res_reviews->num_rows > 0):
     $res_reviews->data_seek(0);
